@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+message Xense_data {
+  // Basic Information
+  uint32 hardware_id = 1;        // Hardware ID
+  float battery_capacity = 2;    // Battery Capacity (%)
+  float absolute_load_power = 3; // Absolute Load Power (Watts)
+  float load_power = 4;          // Supply Power (Watts)
+  float temperature = 5;         // Temperature (°C)
+
+  // GPS coordinates
+  double latitude = 6;  // Latitude in decimal degrees
+  double longitude = 7; // Longitude in decimal degrees
+
+  // Device State
+  uint32 uptime = 11;     // Device uptime (seconds)
+  int32 rssi = 12;        // Signal strength (dBm)
+  uint32 error_code = 13; // Error code
+
+  // Timestamps
+  uint64 timestamp = 14; // UNIX timestamp (seconds since epoch)
+
+  // Metadata
+  string firmware_version = 19;  // Firmware version
+  string hardware_revision = 20; // Hardware version
+}

@@ -1,0 +1,4 @@
+*sh
+lib*
+bin
+external/nanopb
