@@ -1,5 +1,7 @@
 #include "../include/xense.h"
 
+  const int SCALE_FACTOR = 1e6;
+
 /**
  * Serialize the Xense data structure into a buffer.
  *
@@ -41,4 +43,30 @@ bool deserialize_xense_data(const uint8_t *buffer, size_t buffer_size,
     return false;
   }
   return true;
+}
+
+/**
+ * Encode a coordinate into a Coordinate structure.
+ *
+ * @param latitude The latitude in microdegrees.
+ * @param longitude The longitude in microdegrees.
+ * @param coordinate The Coordinate structure to encode into.
+ */
+
+void encode_coordinate(int32_t latitude, uint32_t longitude, Coordinate &coordinate) {
+  coordinate.latitude = latitude * SCALE_FACTOR;
+  coordinate.longitude = longitude * SCALE_FACTOR;
+}
+
+/**
+ * Decode a Coordinate structure into a latitude and longitude.
+ *
+ * @param coordinate The Coordinate structure to decode.
+ * @param latitude The latitude in microdegrees.
+ * @param longitude The longitude in microdegrees.
+ */
+
+void decode_coordinate(const Coordinate &coordinate, int32_t &latitude, uint32_t &longitude) {
+  latitude = coordinate.latitude / SCALE_FACTOR;
+  longitude = coordinate.longitude / SCALE_FACTOR;
 }

@@ -11,71 +11,62 @@
 
 /* Struct definitions */
 typedef struct _Xense_data {
-  /* Basic Information */
-  uint32_t hardware_id;      /* Hardware ID */
-  float battery_capacity;    /* Battery Capacity (%) */
-  float absolute_load_power; /* Absolute Load Power (Watts) */
-  float load_power;          /* Supply Power (Watts) */
-  float temperature;         /* Temperature (°C) */
-  /* GPS coordinates */
-  double latitude;  /* Latitude in decimal degrees */
-  double longitude; /* Longitude in decimal degrees */
-  /* Device State */
-  uint32_t uptime;     /* Device uptime (seconds) */
-  int32_t rssi;        /* Signal strength (dBm) */
-  uint32_t error_code; /* Error code */
-  /* Timestamps */
-  uint64_t timestamp; /* UNIX timestamp (seconds since epoch) */
-  /* Metadata */
-  pb_callback_t firmware_version;  /* Firmware version */
-  pb_callback_t hardware_revision; /* Hardware version */
+    /* Basic Information */
+    uint32_t hardware_id; /* Hardware ID */
+    float battery_capacity; /* Battery Capacity (%) */
+    float absolute_load_power; /* Absolute Load Power (Watts) */
+    float load_power; /* Supply Power (Watts) */
+    float temperature; /* Temperature (°C) */
+    /* GPS coordinates with fixed precision */
+    int32_t latitude; /* Latitude in microdegrees (degrees * 10^7) */
+    int32_t longitude; /* Longitude in microdegrees (degrees * 10^7) */
+    /* Device State */
+    uint32_t uptime; /* Device uptime (seconds) */
+    int32_t rssi; /* Signal strength (dBm) */
+    uint32_t error_code; /* Error code */
+    /* Metadata */
+    float firmware_version; /* Firmware version */
+    float hardware_revision; /* Hardware version */
 } Xense_data;
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define Xense_data_init_default                                                \
-  {                                                                            \
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {{NULL}, NULL}, { {NULL}, NULL }          \
-  }
-#define Xense_data_init_zero                                                   \
-  {                                                                            \
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, {{NULL}, NULL}, { {NULL}, NULL }          \
-  }
+#define Xense_data_init_default                  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+#define Xense_data_init_zero                     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
 /* Field tags (for use in manual encoding/decoding) */
-#define Xense_data_hardware_id_tag 1
-#define Xense_data_battery_capacity_tag 2
-#define Xense_data_absolute_load_power_tag 3
-#define Xense_data_load_power_tag 4
-#define Xense_data_temperature_tag 5
-#define Xense_data_latitude_tag 6
-#define Xense_data_longitude_tag 7
-#define Xense_data_uptime_tag 11
-#define Xense_data_rssi_tag 12
-#define Xense_data_error_code_tag 13
-#define Xense_data_timestamp_tag 14
-#define Xense_data_firmware_version_tag 19
-#define Xense_data_hardware_revision_tag 20
+#define Xense_data_hardware_id_tag               1
+#define Xense_data_battery_capacity_tag          2
+#define Xense_data_absolute_load_power_tag       3
+#define Xense_data_load_power_tag                4
+#define Xense_data_temperature_tag               5
+#define Xense_data_latitude_tag                  6
+#define Xense_data_longitude_tag                 7
+#define Xense_data_uptime_tag                    11
+#define Xense_data_rssi_tag                      12
+#define Xense_data_error_code_tag                13
+#define Xense_data_firmware_version_tag          19
+#define Xense_data_hardware_revision_tag         20
 
 /* Struct field encoding specification for nanopb */
-#define Xense_data_FIELDLIST(X, a)                                             \
-  X(a, STATIC, SINGULAR, UINT32, hardware_id, 1)                               \
-  X(a, STATIC, SINGULAR, FLOAT, battery_capacity, 2)                           \
-  X(a, STATIC, SINGULAR, FLOAT, absolute_load_power, 3)                        \
-  X(a, STATIC, SINGULAR, FLOAT, load_power, 4)                                 \
-  X(a, STATIC, SINGULAR, FLOAT, temperature, 5)                                \
-  X(a, STATIC, SINGULAR, DOUBLE, latitude, 6)                                  \
-  X(a, STATIC, SINGULAR, DOUBLE, longitude, 7)                                 \
-  X(a, STATIC, SINGULAR, UINT32, uptime, 11)                                   \
-  X(a, STATIC, SINGULAR, INT32, rssi, 12)                                      \
-  X(a, STATIC, SINGULAR, UINT32, error_code, 13)                               \
-  X(a, STATIC, SINGULAR, UINT64, timestamp, 14)                                \
-  X(a, CALLBACK, SINGULAR, STRING, firmware_version, 19)                       \
-  X(a, CALLBACK, SINGULAR, STRING, hardware_revision, 20)
-#define Xense_data_CALLBACK pb_default_field_callback
+#define Xense_data_FIELDLIST(X, a) \
+X(a, STATIC,   SINGULAR, UINT32,   hardware_id,       1) \
+X(a, STATIC,   SINGULAR, FLOAT,    battery_capacity,   2) \
+X(a, STATIC,   SINGULAR, FLOAT,    absolute_load_power,   3) \
+X(a, STATIC,   SINGULAR, FLOAT,    load_power,        4) \
+X(a, STATIC,   SINGULAR, FLOAT,    temperature,       5) \
+X(a, STATIC,   SINGULAR, INT32,    latitude,          6) \
+X(a, STATIC,   SINGULAR, INT32,    longitude,         7) \
+X(a, STATIC,   SINGULAR, UINT32,   uptime,           11) \
+X(a, STATIC,   SINGULAR, INT32,    rssi,             12) \
+X(a, STATIC,   SINGULAR, UINT32,   error_code,       13) \
+X(a, STATIC,   SINGULAR, FLOAT,    firmware_version,  19) \
+X(a, STATIC,   SINGULAR, FLOAT,    hardware_revision,  20)
+#define Xense_data_CALLBACK NULL
 #define Xense_data_DEFAULT NULL
 
 extern const pb_msgdesc_t Xense_data_msg;
@@ -84,7 +75,8 @@ extern const pb_msgdesc_t Xense_data_msg;
 #define Xense_data_fields &Xense_data_msg
 
 /* Maximum encoded size of messages (where known) */
-/* Xense_data_size depends on runtime parameters */
+#define PROTO_XENSE_PB_H_MAX_SIZE                Xense_data_size
+#define Xense_data_size                          83
 
 #ifdef __cplusplus
 } /* extern "C" */
