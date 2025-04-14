@@ -1,4 +1,4 @@
-# Smart Solar-Aware Socket Controller (ESP32 + FreeRTOS + Wi-Fi Dashboard)
+# Xense (ESP32 + FreeRTOS + Wi-Fi Dashboard)
 
 ## Overview
 
