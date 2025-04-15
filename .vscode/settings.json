@@ -1,5 +1,8 @@
 {
     "cSpell.words": [
         "Xense"
-    ]
+    ],
+    "files.associations": {
+        "ostream": "cpp"
+    }
 }

@@ -1,23 +1,37 @@
 syntax = "proto3";
 
-message Xense_data {
-  // Basic Information
-  uint32 hardware_id = 1;        // Hardware ID
-  float battery_capacity = 2;    // Battery Capacity (%)
-  float absolute_load_power = 3; // Absolute Load Power (Watts)
-  float load_power = 4;          // Supply Power (Watts)
-  float temperature = 5;         // Temperature (°C)
-
+package Xense;
+message gps {
   // GPS coordinates with fixed precision
-  int32 latitude = 6;  // Latitude in microdegrees (degrees * 10^7)
-  int32 longitude = 7; // Longitude in microdegrees (degrees * 10^7)
-
-  // Device State
-  uint32 uptime = 11;     // Device uptime (seconds)
-  int32 rssi = 12;        // Signal strength (dBm)
-  uint32 error_code = 13; // Error code
-
+  int32 lat_deg = 1;
+  int32 lat_billionths = 2; // Latitude in billionths of a degree
+  int32 lon_deg = 3;
+  int32 lon_billionths = 4; // Longitude in billionths of a degree
+  int32 altitude = 5;       // Altitude in meters
+  uint32 satellites = 6;    // Number of satellites
+  uint32 date = 7;          // Date (e.g., YYYYMMDD)
+  uint32 time = 8;          // Time (e.g., HHMMSS)
+  float hdop = 9;           // Horizontal dilution of precision
+}
+message metadata {
   // Metadata
-  float firmware_version = 19;  // Firmware version
-  float hardware_revision = 20; // Hardware version
+  float firmware_version = 1;  // Firmware version
+  float hardware_revision = 2; // Hardware version
+}
+message state {
+  // Device State
+  uint32 uptime = 1;     // Device uptime (seconds)
+  int32 rssi = 2;        // Signal strength (dBm)
+  uint32 battery_type = 3; // Battery type. 1: Li-ion, 2: LiFePO4, 3: Lead Acid, 4: LiPo, 5: NiMH, 6: NiCd
+  uint32 error_code = 4; // Error code
+}
+
+message data {
+  float battery_capacity = 1;    // Battery Capacity (%)
+  float battery_status = 2;      // Battery Status (%)
+  float battery_voltage = 3;     // Battery Voltage (Volts)
+  float absolute_load_power = 4; // Absolute Load Power (Watts)
+  float load_power = 5;          // Supply Power (Watts)
+  float inverter_power = 6;       // Inverter Power (Watts)
+  bool is_charging = 7;          // Charging status
 }
