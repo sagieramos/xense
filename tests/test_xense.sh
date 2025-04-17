@@ -15,9 +15,7 @@ OUTPUT_FILE="${BASENAME}_exe"
 SRC_FILES="$SRC_FILE \
            ./utils.cpp \
            ./utils.h \
-           ../lib/xense/xense_data.cpp \
-           ../lib/xense/xense_gps.cpp \
-           ../lib/xense/xense_msg.cpp \
+           ../lib/xense/*.cpp \
            ../lib/xense/protoc/xense.pb.c \
            ../external/nanopb/pb_encode.c \
            ../external/nanopb/pb_decode.c \

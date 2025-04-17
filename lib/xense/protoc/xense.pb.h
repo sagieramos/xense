@@ -11,117 +11,134 @@
 
 /* Struct definitions */
 typedef struct _Xense_gps {
-    /* GPS coordinates with fixed precision */
-    int32_t lat_deg;
-    int32_t lat_billionths; /* Latitude in billionths of a degree */
-    int32_t lon_deg;
-    int32_t lon_billionths; /* Longitude in billionths of a degree */
-    int32_t altitude; /* Altitude in meters */
-    uint32_t satellites; /* Number of satellites */
-    uint32_t date; /* Date (e.g., YYYYMMDD) */
-    uint32_t time; /* Time (e.g., HHMMSS) */
-    float hdop; /* Horizontal dilution of precision */
+  /* GPS coordinates with fixed precision */
+  int32_t lat_deg;
+  int32_t lat_billionths; /* Latitude in billionths of a degree */
+  int32_t lon_deg;
+  int32_t lon_billionths; /* Longitude in billionths of a degree */
+  int32_t altitude;       /* Altitude in meters */
+  uint32_t satellites;    /* Number of satellites */
+  uint32_t date;          /* Date (e.g., YYYYMMDD) */
+  uint32_t time;          /* Time (e.g., HHMMSS) */
+  float hdop;             /* Horizontal dilution of precision */
 } Xense_gps;
 
 typedef struct _Xense_metadata {
-    /* Metadata */
-    float firmware_version; /* Firmware version */
-    float hardware_revision; /* Hardware version */
+  /* Metadata */
+  float firmware_version;   /* Firmware version */
+  float hardware_revision;  /* Hardware version */
+  int32_t serial_number;    /* Serial number */
+  uint32_t manufacturer_id; /* Manufacturer ID */
+  uint32_t model_id;        /* Model ID */
 } Xense_metadata;
 
 typedef struct _Xense_state {
-    /* Device State */
-    uint32_t uptime; /* Device uptime (seconds) */
-    int32_t rssi; /* Signal strength (dBm) */
-    uint32_t battery_type; /* Battery type. 1: Li-ion, 2: LiFePO4, 3: Lead Acid, 4: LiPo, 5: NiMH, 6: NiCd */
-    uint32_t error_code; /* Error code */
+  /* Device State */
+  uint32_t uptime;       /* Device uptime (seconds) */
+  int32_t rssi;          /* Signal strength (dBm) */
+  uint32_t battery_type; /* Battery type. 1: Li-ion, 2: LiFePO4, 3: Lead Acid,
+                            4: LiPo, 5: NiMH, 6: NiCd */
+  uint32_t error_code;   /* Error code */
 } Xense_state;
 
 typedef struct _Xense_data {
-    float battery_capacity; /* Battery Capacity (%) */
-    float battery_status; /* Battery Status (%) */
-    float battery_voltage; /* Battery Voltage (Volts) */
-    float absolute_load_power; /* Absolute Load Power (Watts) */
-    float load_power; /* Supply Power (Watts) */
-    float inverter_power; /* Inverter Power (Watts) */
-    bool is_charging; /* Charging status */
+  float battery_capacity;    /* Battery Capacity (%) */
+  float battery_status;      /* Battery Status (%) */
+  float battery_voltage;     /* Battery Voltage (Volts) */
+  float absolute_load_power; /* Absolute Load Power (Watts) */
+  float load_power;          /* Supply Power (Watts) */
+  float inverter_power;      /* Inverter Power (Watts) */
+  bool is_charging;          /* Charging status */
 } Xense_data;
-
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define Xense_gps_init_default                   {0, 0, 0, 0, 0, 0, 0, 0, 0}
-#define Xense_metadata_init_default              {0, 0}
-#define Xense_state_init_default                 {0, 0, 0, 0}
-#define Xense_data_init_default                  {0, 0, 0, 0, 0, 0, 0}
-#define Xense_gps_init_zero                      {0, 0, 0, 0, 0, 0, 0, 0, 0}
-#define Xense_metadata_init_zero                 {0, 0}
-#define Xense_state_init_zero                    {0, 0, 0, 0}
-#define Xense_data_init_zero                     {0, 0, 0, 0, 0, 0, 0}
+#define Xense_gps_init_default                                                 \
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+#define Xense_metadata_init_default                                            \
+  { 0, 0, 0, 0, 0 }
+#define Xense_state_init_default                                               \
+  { 0, 0, 0, 0 }
+#define Xense_data_init_default                                                \
+  { 0, 0, 0, 0, 0, 0, 0 }
+#define Xense_gps_init_zero                                                    \
+  { 0, 0, 0, 0, 0, 0, 0, 0, 0 }
+#define Xense_metadata_init_zero                                               \
+  { 0, 0, 0, 0, 0 }
+#define Xense_state_init_zero                                                  \
+  { 0, 0, 0, 0 }
+#define Xense_data_init_zero                                                   \
+  { 0, 0, 0, 0, 0, 0, 0 }
 
 /* Field tags (for use in manual encoding/decoding) */
-#define Xense_gps_lat_deg_tag                    1
-#define Xense_gps_lat_billionths_tag             2
-#define Xense_gps_lon_deg_tag                    3
-#define Xense_gps_lon_billionths_tag             4
-#define Xense_gps_altitude_tag                   5
-#define Xense_gps_satellites_tag                 6
-#define Xense_gps_date_tag                       7
-#define Xense_gps_time_tag                       8
-#define Xense_gps_hdop_tag                       9
-#define Xense_metadata_firmware_version_tag      1
-#define Xense_metadata_hardware_revision_tag     2
-#define Xense_state_uptime_tag                   1
-#define Xense_state_rssi_tag                     2
-#define Xense_state_battery_type_tag             3
-#define Xense_state_error_code_tag               4
-#define Xense_data_battery_capacity_tag          1
-#define Xense_data_battery_status_tag            2
-#define Xense_data_battery_voltage_tag           3
-#define Xense_data_absolute_load_power_tag       4
-#define Xense_data_load_power_tag                5
-#define Xense_data_inverter_power_tag            6
-#define Xense_data_is_charging_tag               7
+#define Xense_gps_lat_deg_tag 1
+#define Xense_gps_lat_billionths_tag 2
+#define Xense_gps_lon_deg_tag 3
+#define Xense_gps_lon_billionths_tag 4
+#define Xense_gps_altitude_tag 5
+#define Xense_gps_satellites_tag 6
+#define Xense_gps_date_tag 7
+#define Xense_gps_time_tag 8
+#define Xense_gps_hdop_tag 9
+#define Xense_metadata_firmware_version_tag 1
+#define Xense_metadata_hardware_revision_tag 2
+#define Xense_metadata_serial_number_tag 3
+#define Xense_metadata_manufacturer_id_tag 4
+#define Xense_metadata_model_id_tag 5
+#define Xense_state_uptime_tag 1
+#define Xense_state_rssi_tag 2
+#define Xense_state_battery_type_tag 3
+#define Xense_state_error_code_tag 4
+#define Xense_data_battery_capacity_tag 1
+#define Xense_data_battery_status_tag 2
+#define Xense_data_battery_voltage_tag 3
+#define Xense_data_absolute_load_power_tag 4
+#define Xense_data_load_power_tag 5
+#define Xense_data_inverter_power_tag 6
+#define Xense_data_is_charging_tag 7
 
 /* Struct field encoding specification for nanopb */
-#define Xense_gps_FIELDLIST(X, a) \
-X(a, STATIC,   SINGULAR, INT32,    lat_deg,           1) \
-X(a, STATIC,   SINGULAR, INT32,    lat_billionths,    2) \
-X(a, STATIC,   SINGULAR, INT32,    lon_deg,           3) \
-X(a, STATIC,   SINGULAR, INT32,    lon_billionths,    4) \
-X(a, STATIC,   SINGULAR, INT32,    altitude,          5) \
-X(a, STATIC,   SINGULAR, UINT32,   satellites,        6) \
-X(a, STATIC,   SINGULAR, UINT32,   date,              7) \
-X(a, STATIC,   SINGULAR, UINT32,   time,              8) \
-X(a, STATIC,   SINGULAR, FLOAT,    hdop,              9)
+#define Xense_gps_FIELDLIST(X, a)                                              \
+  X(a, STATIC, SINGULAR, INT32, lat_deg, 1)                                    \
+  X(a, STATIC, SINGULAR, INT32, lat_billionths, 2)                             \
+  X(a, STATIC, SINGULAR, INT32, lon_deg, 3)                                    \
+  X(a, STATIC, SINGULAR, INT32, lon_billionths, 4)                             \
+  X(a, STATIC, SINGULAR, INT32, altitude, 5)                                   \
+  X(a, STATIC, SINGULAR, UINT32, satellites, 6)                                \
+  X(a, STATIC, SINGULAR, UINT32, date, 7)                                      \
+  X(a, STATIC, SINGULAR, UINT32, time, 8)                                      \
+  X(a, STATIC, SINGULAR, FLOAT, hdop, 9)
 #define Xense_gps_CALLBACK NULL
 #define Xense_gps_DEFAULT NULL
 
-#define Xense_metadata_FIELDLIST(X, a) \
-X(a, STATIC,   SINGULAR, FLOAT,    firmware_version,   1) \
-X(a, STATIC,   SINGULAR, FLOAT,    hardware_revision,   2)
+#define Xense_metadata_FIELDLIST(X, a)                                         \
+  X(a, STATIC, SINGULAR, FLOAT, firmware_version, 1)                           \
+  X(a, STATIC, SINGULAR, FLOAT, hardware_revision, 2)                          \
+  X(a, STATIC, SINGULAR, INT32, serial_number, 3)                              \
+  X(a, STATIC, SINGULAR, UINT32, manufacturer_id, 4)                           \
+  X(a, STATIC, SINGULAR, UINT32, model_id, 5)
 #define Xense_metadata_CALLBACK NULL
 #define Xense_metadata_DEFAULT NULL
 
-#define Xense_state_FIELDLIST(X, a) \
-X(a, STATIC,   SINGULAR, UINT32,   uptime,            1) \
-X(a, STATIC,   SINGULAR, INT32,    rssi,              2) \
-X(a, STATIC,   SINGULAR, UINT32,   battery_type,      3) \
-X(a, STATIC,   SINGULAR, UINT32,   error_code,        4)
+#define Xense_state_FIELDLIST(X, a)                                            \
+  X(a, STATIC, SINGULAR, UINT32, uptime, 1)                                    \
+  X(a, STATIC, SINGULAR, INT32, rssi, 2)                                       \
+  X(a, STATIC, SINGULAR, UINT32, battery_type, 3)                              \
+  X(a, STATIC, SINGULAR, UINT32, error_code, 4)
 #define Xense_state_CALLBACK NULL
 #define Xense_state_DEFAULT NULL
 
-#define Xense_data_FIELDLIST(X, a) \
-X(a, STATIC,   SINGULAR, FLOAT,    battery_capacity,   1) \
-X(a, STATIC,   SINGULAR, FLOAT,    battery_status,    2) \
-X(a, STATIC,   SINGULAR, FLOAT,    battery_voltage,   3) \
-X(a, STATIC,   SINGULAR, FLOAT,    absolute_load_power,   4) \
-X(a, STATIC,   SINGULAR, FLOAT,    load_power,        5) \
-X(a, STATIC,   SINGULAR, FLOAT,    inverter_power,    6) \
-X(a, STATIC,   SINGULAR, BOOL,     is_charging,       7)
+#define Xense_data_FIELDLIST(X, a)                                             \
+  X(a, STATIC, SINGULAR, FLOAT, battery_capacity, 1)                           \
+  X(a, STATIC, SINGULAR, FLOAT, battery_status, 2)                             \
+  X(a, STATIC, SINGULAR, FLOAT, battery_voltage, 3)                            \
+  X(a, STATIC, SINGULAR, FLOAT, absolute_load_power, 4)                        \
+  X(a, STATIC, SINGULAR, FLOAT, load_power, 5)                                 \
+  X(a, STATIC, SINGULAR, FLOAT, inverter_power, 6)                             \
+  X(a, STATIC, SINGULAR, BOOL, is_charging, 7)
 #define Xense_data_CALLBACK NULL
 #define Xense_data_DEFAULT NULL
 
@@ -137,11 +154,11 @@ extern const pb_msgdesc_t Xense_data_msg;
 #define Xense_data_fields &Xense_data_msg
 
 /* Maximum encoded size of messages (where known) */
-#define XENSE_PROTO_XENSE_PB_H_MAX_SIZE          Xense_gps_size
-#define Xense_data_size                          32
-#define Xense_gps_size                           78
-#define Xense_metadata_size                      10
-#define Xense_state_size                         29
+#define XENSE_PROTO_XENSE_PB_H_MAX_SIZE Xense_gps_size
+#define Xense_data_size 32
+#define Xense_gps_size 78
+#define Xense_metadata_size 33
+#define Xense_state_size 29
 
 #ifdef __cplusplus
 } /* extern "C" */

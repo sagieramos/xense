@@ -17,6 +17,9 @@ message metadata {
   // Metadata
   float firmware_version = 1;  // Firmware version
   float hardware_revision = 2; // Hardware version
+  int32 serial_number = 3;      // Serial number
+  uint32 manufacturer_id = 4; // Manufacturer ID
+  uint32 model_id = 5;      // Model ID
 }
 message state {
   // Device State

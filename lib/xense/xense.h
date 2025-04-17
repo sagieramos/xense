@@ -14,8 +14,7 @@
 #define XENSE_DATA_TYPE_ID 5
 
 // xense_common.h
-typedef enum
-{
+typedef enum {
   XENSE_OK,
   XENSE_NULL_BUFFER,
   XENSE_ENCODE_FAILED,
@@ -25,8 +24,7 @@ typedef enum
 
 typedef void (*xense_callback)(const void *buffer, size_t size);
 
-struct XenseMessageDescriptor
-{
+struct XenseMessageDescriptor {
   const void *serialized_message = nullptr; // For serialization
   void *deserialized_message = nullptr;     // For deserialization
   const pb_msgdesc_t *fields = nullptr;     // Message descriptor
@@ -48,21 +46,33 @@ XenseStatus deserialize_xense_message(const XenseMessageDescriptor &desc,
                                       const uint8_t *buffer, size_t buffer_size,
                                       xense_callback callback = nullptr);
 
-XenseStatus serialize_xense_data(const Xense_data &data,
-                                 uint8_t *buffer, size_t *buffer_size,
-                                 uint8_t type_id,
+XenseStatus serialize_xense_data(const Xense_data &data, uint8_t *buffer,
+                                 size_t *buffer_size, uint8_t type_id,
                                  xense_callback callback = nullptr);
 
 XenseStatus deserialize_xense_data(const uint8_t *buffer, size_t buffer_size,
                                    Xense_data &data,
                                    xense_callback callback = nullptr);
 
-XenseStatus serialize_xense_gps(const Xense_gps &coordinate,
-                                        uint8_t *buffer, size_t *buffer_size,
-                                        uint8_t type_id,
-                                        xense_callback callback = nullptr);
+XenseStatus serialize_xense_gps(const Xense_gps &gps, uint8_t *buffer,
+                                size_t *buffer_size, uint8_t type_id,
+                                xense_callback callback = nullptr);
 XenseStatus deserialize_xense_gps(const uint8_t *buffer, size_t buffer_size,
-                                          Xense_gps &coordinate,
-                                          xense_callback callback = nullptr);
+                                  Xense_gps &gps,
+                                  xense_callback callback = nullptr);
+XenseStatus serialize_xense_metadata(const Xense_metadata &metadata,
+                                     uint8_t *buffer, size_t *buffer_size,
+                                     uint8_t type_id,
+                                     xense_callback callback = nullptr);
+XenseStatus deserialize_xense_metadata(const uint8_t *buffer,
+                                       size_t buffer_size,
+                                       Xense_metadata &metadata,
+                                       xense_callback callback = nullptr);
+XenseStatus serialize_xense_state(const Xense_state &state, uint8_t *buffer,
+                                  size_t *buffer_size, uint8_t type_id,
+                                  xense_callback callback = nullptr);
+XenseStatus deserialize_xense_state(const uint8_t *buffer, size_t buffer_size,
+                                    Xense_state &state,
+                                    xense_callback callback = nullptr);
 
 #endif // XENSE_H
