@@ -8,7 +8,7 @@
 #include "./protoc/xense.pb.h"
 
 /* Type Identifiers (for use in manual encoding/decoding) */
-#define XENSE_COORDINATE_TYPE_ID 2
+#define XENSE_GPS_TYPE_ID 2
 #define XENSE_METADATA_TYPE_ID 3
 #define XENSE_STATE_TYPE_ID 4
 #define XENSE_DATA_TYPE_ID 5

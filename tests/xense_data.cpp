@@ -1,23 +1,8 @@
-#include <iostream>
-#include <cassert>
-#include <cstring>
-#include "../lib/xense/xense.h"
-
-// Utility function to print a buffer as hex values
-void print_buffer(const uint8_t *buffer, size_t buffer_size)
-{
-    std::cout << "Buffer content: ";
-    for (size_t i = 0; i < buffer_size; ++i)
-    {
-        std::cout << std::hex << static_cast<int>(buffer[i]) << " ";
-    }
-    std::cout << std::dec << std::endl; // Switch back to decimal format
-}
+#include "utils.h"
 
 // Utility function to print the Xense_data structure
 void print_data(const Xense_data &data)
 {
-    std::cout << "Data before serialization:" << std::endl;
     std::cout << "Battery capacity: " << data.battery_capacity << std::endl;
     std::cout << "Absolute load power: " << data.absolute_load_power << std::endl;
     std::cout << "Load power: " << data.load_power << std::endl;
@@ -42,6 +27,7 @@ void test_xense_data_serialization_deserialization()
     size_t buffer_size = sizeof(buffer);
 
     // Print data before serialization
+    std::cout << "Data before serialization:" << std::endl;
     print_data(data);
 
     std::cout << "Starting serialization..." << std::endl;
@@ -76,6 +62,7 @@ void test_xense_data_serialization_deserialization()
     assert(deserialized_data.is_charging == data.is_charging);
     std::cout << "All values match!" << std::endl;
     // Print deserialized values
+    std::cout << "Print deserialized values:" << std::endl;
     print_data(deserialized_data);
     std::cout << "Xense data serialization and deserialization test passed!" << std::endl;
 }

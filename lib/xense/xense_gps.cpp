@@ -28,7 +28,7 @@ const int SCALE_FACTOR = 1e9;
  * @param callback The callback to call after serialization.
  * @return True if the deserialization was successful, false otherwise.
  */
-XenseStatus deserialize_xense_coordinate(const uint8_t *buffer, size_t buffer_size,
+XenseStatus deserialize_xense_gps(const uint8_t *buffer, size_t buffer_size,
   Xense_gps &gps,
   xense_callback callback) {
   return deserialize_xense_message({&gps, Xense_gps_fields},
