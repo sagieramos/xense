@@ -10,3 +10,4 @@ include/python*
 venv/
 .env/
 node_modules
+

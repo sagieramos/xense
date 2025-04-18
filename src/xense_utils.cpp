@@ -1,5 +1,7 @@
 #include "xense_utils.h"
 
+#define TASK "TASK"
+
 /**
  * @brief Control a FreeRTOS task.
  *
@@ -21,7 +23,7 @@ void control_task(TaskHandle_t &task, TaskControlAction action,
                   TaskFunction_t taskFunction, const char *taskName,
                   uint32_t stackDepth, void *parameters, UBaseType_t priority) {
   if (task == NULL && action != TASK_RESTART) {
-    LOG_LN("Task is NULL");
+    LOG_LN(TASK, "NULL");
     return;
   }
 
@@ -29,18 +31,19 @@ void control_task(TaskHandle_t &task, TaskControlAction action,
   case TASK_RESUME:
     if (eTaskGetState(task) == eSuspended) {
       vTaskResume(task);
-      LOG_F("Resumed task: %s\n", pcTaskGetTaskName(task));
+      
+      LOG_F(TASK, "%s Resume\n", pcTaskGetName(task));
     } else {
-      LOG_F("Task already running: %s\n", pcTaskGetTaskName(task));
+      LOG_F(TASK, "%s already running\n", pcTaskGetName(task));
     }
     break;
 
   case TASK_SUSPEND:
     if (eTaskGetState(task) != eSuspended) {
       vTaskSuspend(task);
-      LOG_F("Suspended task: %s\n", pcTaskGetTaskName(task));
+      LOG_F(TASK, "%s suspended\n", pcTaskGetName(task));
     } else {
-      LOG_F("Task already suspended: %s\n", pcTaskGetTaskName(task));
+      LOG_F(TASK, "%s already suspended\n", pcTaskGetName(task));
     }
     break;
 
@@ -59,22 +62,13 @@ void control_task(TaskHandle_t &task, TaskControlAction action,
     if (taskFunction != nullptr && taskName != nullptr) {
       xTaskCreatePinnedToCore(taskFunction, taskName, stackDepth, parameters,
                               priority, &task, 1);
-      LOG_F("Restarted task: %s\n", taskName);
+      LOG_F(TASK, "%s Restarted\n", taskName);
     } else {
-      LOG_LN("Cannot restart task: taskFunction or taskName is NULL");
+      LOG_LN(TASK, "Cannot restart: taskFunction or taskName is NULL");
     }
     break;
   }
 }
-
-enum TimeUnit {
-  TIME_UNIT_MICROSECONDS,
-  TIME_UNIT_MILLISECONDS,
-  TIME_UNIT_SECONDS,
-  TIME_UNIT_MINUTES,
-  TIME_UNIT_HOURS,
-  TIME_UNIT_DAYS
-};
 
 /**
  * @brief Get the current time in milliseconds.
