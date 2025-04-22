@@ -1,6 +1,8 @@
 #include "xense_utils.h"
 
 #define TASK "TASK"
+#define LED_QUEUE_LENGTH 5
+static QueueHandle_t led_cmd_queue;
 
 /**
  * @brief Control a FreeRTOS task.
@@ -31,7 +33,7 @@ void control_task(TaskHandle_t &task, TaskControlAction action,
   case TASK_RESUME:
     if (eTaskGetState(task) == eSuspended) {
       vTaskResume(task);
-      
+
       LOG_F(TASK, "%s Resume\n", pcTaskGetName(task));
     } else {
       LOG_F(TASK, "%s already running\n", pcTaskGetName(task));
@@ -81,4 +83,53 @@ void control_task(TaskHandle_t &task, TaskControlAction action,
 
 unsigned long get_current_ms() {
   return xTaskGetTickCount() * portTICK_PERIOD_MS;
+}
+
+static void led_task(void *arg) {
+  gpio_reset_pin(LED_INDICATOR);
+  gpio_set_direction(LED_INDICATOR, GPIO_MODE_OUTPUT);
+
+  led_msg_t current_cmd = {.command = LED_CMD_BLINK_CUSTOM,
+                           .on_duration_ms = 500,
+                           .off_duration_ms = 500};
+
+  while (true) {
+    led_msg_t new_cmd;
+    if (xQueueReceive(led_cmd_queue, &new_cmd, 0)) {
+      current_cmd = new_cmd;
+    }
+
+    switch (current_cmd.command) {
+    case LED_CMD_BLINK_CUSTOM:
+      gpio_set_level(LED_INDICATOR, 1);
+      vTaskDelay(current_cmd.on_duration_ms / portTICK_PERIOD_MS);
+      gpio_set_level(LED_INDICATOR, 0);
+      vTaskDelay(current_cmd.off_duration_ms / portTICK_PERIOD_MS);
+      break;
+    case LED_CMD_SOLID_ON:
+      gpio_set_level(LED_INDICATOR, 1);
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+      break;
+    case LED_CMD_SOLID_OFF:
+      gpio_set_level(LED_INDICATOR, 0);
+      vTaskDelay(100 / portTICK_PERIOD_MS);
+      break;
+    }
+  }
+}
+
+void led_indicator_control(led_cmd_t command, uint32_t on_duration_ms,
+                           uint32_t off_duration_ms) {
+  led_msg_t msg = {.command = command,
+                   .on_duration_ms = on_duration_ms,
+                   .off_duration_ms = off_duration_ms};
+
+  xQueueSend(led_cmd_queue, &msg, 0);
+}
+
+void init_led_cmd() {
+  gpio_reset_pin(LED_INDICATOR);
+  gpio_set_direction(LED_INDICATOR, GPIO_MODE_OUTPUT);
+  led_cmd_queue = xQueueCreate(LED_QUEUE_LENGTH, sizeof(led_msg_t));
+  xTaskCreate(led_task, "led_task", 2048, NULL, 5, NULL);
 }

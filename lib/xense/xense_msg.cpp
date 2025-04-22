@@ -31,5 +31,3 @@ XenseStatus deserialize_xense_message(const XenseMessageDescriptor &desc,
     callback(buffer, buffer_size);
   return XENSE_OK;
 }
-
-
