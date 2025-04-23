@@ -1,0 +1,7 @@
+{
+    "version": "0.2",
+    "language": "en",
+    "words": ["esp32", "wifi", "ssid", "mac", "nvs", "xense"],
+    "ignorePaths": ["build", "sdkconfig", "*.map"]
+  }
+  

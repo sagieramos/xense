@@ -7,7 +7,7 @@
 lib/python*
 lib64
 include/python*
-include/config.h
+include/config_xense.h
 .env/
 node_modules
 data/

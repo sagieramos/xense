@@ -1,4 +1,5 @@
 #include "xense_utils.h"
+#include "esp_mac.h"
 
 #define TASK "TASK"
 #define LED_QUEUE_LENGTH 5
@@ -25,7 +26,7 @@ void control_task(TaskHandle_t &task, TaskControlAction action,
                   TaskFunction_t taskFunction, const char *taskName,
                   uint32_t stackDepth, void *parameters, UBaseType_t priority) {
   if (task == NULL && action != TASK_RESTART) {
-    LOG_LN(TASK, "NULL");
+    LOG_XENSE(TASK, "NULL");
     return;
   }
 
@@ -34,39 +35,39 @@ void control_task(TaskHandle_t &task, TaskControlAction action,
     if (eTaskGetState(task) == eSuspended) {
       vTaskResume(task);
 
-      LOG_F(TASK, "%s Resume\n", pcTaskGetName(task));
+      LOG_XENSE(TASK, "%s Resume\n", pcTaskGetName(task));
     } else {
-      LOG_F(TASK, "%s already running\n", pcTaskGetName(task));
+      LOG_XENSE(TASK, "%s already running\n", pcTaskGetName(task));
     }
     break;
 
   case TASK_SUSPEND:
     if (eTaskGetState(task) != eSuspended) {
       vTaskSuspend(task);
-      LOG_F(TASK, "%s suspended\n", pcTaskGetName(task));
+      LOG_XENSE(TASK, "%s suspended\n", pcTaskGetName(task));
     } else {
-      LOG_F(TASK, "%s already suspended\n", pcTaskGetName(task));
+      LOG_XENSE(TASK, "%s already suspended\n", pcTaskGetName(task));
     }
     break;
 
   case TASK_DELETE:
     vTaskDelete(task);
-    LOG_F("Deleted task\n");
+    LOG_XENSE("Deleted task\n");
     task = NULL;
     break;
 
   case TASK_RESTART:
     if (task != NULL) {
       vTaskDelete(task);
-      LOG_F("Deleted task for restart\n");
+      LOG_XENSE("Deleted task for restart\n");
       task = NULL;
     }
     if (taskFunction != nullptr && taskName != nullptr) {
       xTaskCreatePinnedToCore(taskFunction, taskName, stackDepth, parameters,
                               priority, &task, 1);
-      LOG_F(TASK, "%s Restarted\n", taskName);
+      LOG_XENSE(TASK, "%s Restarted\n", taskName);
     } else {
-      LOG_LN(TASK, "Cannot restart: taskFunction or taskName is NULL");
+      LOG_XENSE(TASK, "Cannot restart: taskFunction or taskName is NULL");
     }
     break;
   }

@@ -12,8 +12,6 @@
 #include "xense_utils.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/param.h>
 
 #define MAX_CLIENTS 10
 
@@ -168,21 +166,32 @@ static httpd_handle_t start_webserver(void) {
 extern "C" void app_main(void);
 uint8_t mac[6];
 
+void my_task(void *pvParameters) {
+  vTaskDelay(pdMS_TO_TICKS(2000));
+  // Run once
+  // do_something();
+  // Done!
+  vTaskDelete(NULL);
+}
+
 void app_main(void) {
   init_led_cmd();
   ESP_ERROR_CHECK(nvs_flash_init());
   ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-  ESP_ERROR_CHECK(esp_read_mac(mac, ESP_MAC_WIFI_STA));
-  ESP_LOGI(TAG, "MAC Address: %02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1],
-           mac[2], mac[3], mac[4], mac[5]);
+  /*   ESP_ERROR_CHECK(esp_read_mac(mac, ESP_MAC_WIFI_STA));
+    ESP_LOGI(TAG, "MAC Address: %02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1],
+             mac[2], mac[3], mac[4], mac[5]); */
 
-  clients_mutex = xSemaphoreCreateMutex();
+  // clients_mutex = xSemaphoreCreateMutex();
 
-  wifi_init_sta();
-  start_webserver();
+  // wifi_init_sta();
+  // wifi_init_ap();
+  wifi_init_ap_sta();
 
-  xTaskCreate(websocket_broadcast_task, "ws_broadcast", 4096, NULL, 5, NULL);
+  // start_webserver();
+
+  // xTaskCreate(websocket_broadcast_task, "ws_broadcast", 4096, NULL, 5, NULL);
 
   while (true) {
     vTaskDelay(1000 / portTICK_PERIOD_MS);

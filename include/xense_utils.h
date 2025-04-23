@@ -4,6 +4,7 @@
 #include "driver/gpio.h"
 #include "esp_https_server.h"
 #include "esp_log.h"
+#include "esp_mac.h"
 #include "esp_netif.h"
 #include "esp_tls.h"
 #include "esp_wifi.h"
@@ -13,14 +14,9 @@
 #include <string.h>
 
 #ifdef LOG_ENABLED
-#define LOG_(tag, ...) esp_log_write(ESP_LOG_INFO, tag, __VA_ARGS__)
-#define LOG_LN(tag, ...) esp_log_write(ESP_LOG_INFO, tag, __VA_ARGS__)
-#define LOG_F(tag, ...) ESP_LOGI(tag, __VA_ARGS__)
+#define LOG_XENSE(tag, ...) ESP_LOGI(tag, __VA_ARGS__)
 #else
-#define LOG_BEGIN(baud) ((void)0)
-#define LOG_(tag, ...) ((void)0)
-#define LOG_LN(tag, ...) ((void)0)
-#define LOG_F(tag, ...) ((void)0)
+#define LOG_XENSE(tag, ...) ((void)0)
 #endif
 
 const gpio_num_t LED_INDICATOR = GPIO_NUM_2;
@@ -51,6 +47,9 @@ void control_task(TaskHandle_t &task, TaskControlAction action,
 unsigned long get_current_ms();
 
 void wifi_init_sta();
+void wifi_init_ap();
+void wifi_init_ap_sta();
+esp_err_t wifi_scan();
 void init_led_cmd();
 
 void led_indicator_control(led_cmd_t command, uint32_t on_duration_ms,
