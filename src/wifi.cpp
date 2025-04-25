@@ -4,9 +4,11 @@
 #include "xense_utils.h"
 
 #define TAG "WiFiModule"
+#define DEFAULT_SCAN_LIST_SIZE 20
 
 #define WIFI_CONNECTED_BIT BIT0
 static EventGroupHandle_t wifi_event_group;
+bool is_connected = false;
 
 // === LED BLINK ===
 static const wifi_sta_config_t sta_config = {
@@ -14,7 +16,7 @@ static const wifi_sta_config_t sta_config = {
     .password = WIFI_PASS,
     .scan_method = WIFI_ALL_CHANNEL_SCAN,
     .bssid_set = false,
-    .bssid = {0},
+    .bssid = {0x00, 0x5F, 0x67, 0x2D, 0xC2, 0x00},
     .channel = 0,
     .listen_interval = 3,
     .sort_method = WIFI_CONNECT_AP_BY_SIGNAL,
@@ -59,28 +61,6 @@ wifi_config_t ap_config = {
            .pmf_cfg = {.capable = true, .required = false},
            .sae_pwe_h2e = WPA3_SAE_PWE_BOTH}};
 
-wifi_scan_config_t scan_config = {
-    .ssid = NULL,        // NULL: scan all SSIDs
-    .bssid = NULL,       // NULL: scan all BSSIDs
-    .channel = 0,        // 0: scan all channels (or use channel_bitmap)
-    .show_hidden = true, // true: include hidden SSIDs
-    .scan_type = WIFI_SCAN_TYPE_ACTIVE, // or WIFI_SCAN_TYPE_PASSIVE
-    .scan_time =
-        {
-            .active =
-                {
-                    .min = 100, // WIFI_ACTIVE_SCAN_MIN_DEFAULT_TIME,
-                    .max = 300  // WIFI_ACTIVE_SCAN_MAX_DEFAULT_TIME
-                },
-            .passive = 300 // WIFI_PASSIVE_SCAN_DEFAULT_TIME
-        },                
-    .home_chan_dwell_time = WIFI_SCAN_HOME_CHANNEL_DWELL_DEFAULT_TIME, // 30ms
-    .channel_bitmap = {
-        .ghz_2_channels =
-            0x1FFF, // Enable channels 1–13 (bits 0–12 = channels 1–13)
-        .ghz_5_channels = 0 // Skip 5 GHz
-    }};
-
 // === WIFI EVENT HANDLER ===
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
                                int32_t event_id, void *event_data) {
@@ -96,6 +76,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
       LOG_XENSE(TAG, "Disconnected. Reconnecting...");
       xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
       esp_wifi_connect();
+      is_connected = false;
       led_indicator_control(LED_CMD_BLINK_CUSTOM, 500, 500); // Slow blink
       break;
 
@@ -108,6 +89,16 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
           (wifi_event_ap_staconnected_t *)event_data;
       LOG_XENSE(TAG, "Station connected, MAC: " MACSTR ", AID: %d",
                 MAC2STR(event->mac), event->aid);
+      is_connected = true;
+      break;
+    }
+
+    case WIFI_EVENT_STA_CONNECTED: {
+      wifi_event_sta_connected_t *event =
+          (wifi_event_sta_connected_t *)event_data;
+      LOG_XENSE(TAG, "Station connected to AP, SSID: %s, BSSID: " MACSTR,
+                event->ssid, MAC2STR(event->bssid));
+      is_connected = true;
       break;
     }
 
@@ -152,6 +143,8 @@ void wifi_init_sta(void) {
   ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_SCAN_DONE,
                                              &wifi_event_handler, NULL));
   ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP,
+                                             &wifi_event_handler, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, WIFI_EVENT_STA_CONNECTED,
                                              &wifi_event_handler, NULL));
 
   ESP_ERROR_CHECK(esp_netif_init());
@@ -209,7 +202,7 @@ void wifi_init_ap_sta() {
 
   // Create network interfaces
   esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
-  esp_netif_t *ap_netif = esp_netif_create_default_wifi_ap();
+  esp_netif_create_default_wifi_ap();
 
   // Register only necessary events
   ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_START,
@@ -226,15 +219,11 @@ void wifi_init_ap_sta() {
       WIFI_EVENT, WIFI_EVENT_AP_STADISCONNECTED, &wifi_event_handler, NULL));
   ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP,
                                              &wifi_event_handler, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, WIFI_EVENT_STA_CONNECTED,
+                                             &wifi_event_handler, NULL));
 
   // Set hostname for STA interface (optional: can also set for AP if needed)
   ESP_ERROR_CHECK(esp_netif_set_hostname(sta_netif, "xense"));
-
-  // Register event handlers BEFORE starting Wi-Fi
-  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID,
-                                             &wifi_event_handler, NULL));
-  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP,
-                                             &wifi_event_handler, NULL));
 
   // Initialize Wi-Fi driver
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -255,60 +244,69 @@ void wifi_init_ap_sta() {
   ESP_ERROR_CHECK(esp_wifi_connect());
 
   LOG_XENSE(TAG, "AP and STA mode started.");
+
+  vTaskDelay(pdMS_TO_TICKS(1000));
+  wifi_scan();
 }
 
-// === Scan APs ===
-esp_err_t wifi_scan() {
-  // Clear previous scan event
-  xEventGroupClearBits(wifi_event_group, BIT0);
+void wifi_scan() {
+#ifdef LOG_ENABLED
+  wifi_mode_t mode;
+  esp_err_t err = esp_wifi_get_mode(&mode);
+  if (err != ESP_OK) {
+    LOG_XENSE(TAG, "Failed to get Wi-Fi mode");
+    return;
+  }
+  if (mode != WIFI_MODE_STA && mode != WIFI_MODE_APSTA) {
+    LOG_XENSE(TAG, "Wi-Fi mode is not STA or APSTA");
+    return;
+  }
+#endif
 
-  // Start the scan
-  ESP_LOGI(TAG, "Starting Wi-Fi scan...");
-  esp_err_t ret = esp_wifi_scan_start(&scan_config, false); // Non-blocking scan
-  if (ret != ESP_OK) {
-    ESP_LOGE(TAG, "Failed to start scan: %s", esp_err_to_name(ret));
-    return ret;
+  if (!is_connected) {
+    LOG_XENSE(TAG, "Wi-Fi not connected, cannot scan");
+    esp_wifi_disconnect();
   }
 
-  // Wait for scan to complete (timeout after 10 seconds)
-  EventBits_t bits = xEventGroupWaitBits(wifi_event_group, BIT0, pdTRUE,
-                                         pdFALSE, pdMS_TO_TICKS(10000));
-  if (!(bits & BIT0)) {
-    ESP_LOGE(TAG, "Scan timed out");
-    return ESP_ERR_TIMEOUT;
-  }
-
-  // Retrieve scan results
+  uint16_t number = DEFAULT_SCAN_LIST_SIZE;
+  wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
   uint16_t ap_count = 0;
-  esp_wifi_scan_get_ap_num(&ap_count);
-  ESP_LOGI(TAG, "Found %u access points", ap_count);
+  memset(ap_info, 0, sizeof(ap_info));
 
-  if (ap_count == 0) {
-    return ESP_OK;
+  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+  ESP_ERROR_CHECK(esp_wifi_start());
+
+  wifi_scan_config_t *scan_config =
+      (wifi_scan_config_t *)calloc(1, sizeof(wifi_scan_config_t));
+  if (!scan_config) {
+    LOG_XENSE(TAG, "Memory Allocation for scan config failed!");
+    return;
+  }
+  ESP_ERROR_CHECK(esp_wifi_scan_start(NULL, true));
+
+  vTaskDelay(pdMS_TO_TICKS(1000));
+
+  // Get scan results
+  ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
+  ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
+
+  // Process results
+  for (int i = 0; i < number; i++) {
+    LOG_XENSE(TAG, "-------------------%d---------------------", 1 + i);
+    LOG_XENSE(TAG, "SSID: %s", ap_info[i].ssid);
+    LOG_XENSE(TAG, "BSSID: " MACSTR, MAC2STR(ap_info[i].bssid));
+    LOG_XENSE(TAG, "RSSI: %d", ap_info[i].rssi);
+    LOG_XENSE(TAG, "Auth: %d", ap_info[i].authmode);
+    LOG_XENSE(TAG, "Channel: %d", ap_info[i].primary);
+    LOG_XENSE(TAG, "WiFi Cipher: %d", ap_info[i].pairwise_cipher);
+    LOG_XENSE("Chennel Width or Bandwidth", " %d", ap_info[i].bandwidth);
   }
 
-  wifi_ap_record_t *ap_list =
-      (wifi_ap_record_t *)malloc(ap_count * sizeof(wifi_ap_record_t));
-  if (ap_list == NULL) {
-    ESP_LOGE(TAG, "Failed to allocate memory for AP list");
-    return ESP_ERR_NO_MEM;
-  }
+  free(scan_config);
 
-  ret = esp_wifi_scan_get_ap_records(&ap_count, ap_list);
-  if (ret != ESP_OK) {
-    ESP_LOGE(TAG, "Failed to get AP records: %s", esp_err_to_name(ret));
-    free(ap_list);
-    return ret;
-  }
+  LOG_XENSE(TAG, "------------Scan Completed(%d)-----------", ap_count);
 
-  // Print scan results
-  for (uint16_t i = 0; i < ap_count; i++) {
-    wifi_ap_record_t *ap = &ap_list[i];
-    ESP_LOGI(TAG, "AP %u: SSID='%s', RSSI=%d, Channel=%u, Auth=%d", i + 1,
-             ap->ssid, ap->rssi, ap->primary, ap->authmode);
+  if (!is_connected) {
+    ESP_ERROR_CHECK(esp_wifi_connect());
   }
-
-  // Clean up
-  free(ap_list);
-  return ESP_OK;
 }

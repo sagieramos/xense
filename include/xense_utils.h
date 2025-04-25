@@ -49,7 +49,7 @@ unsigned long get_current_ms();
 void wifi_init_sta();
 void wifi_init_ap();
 void wifi_init_ap_sta();
-esp_err_t wifi_scan();
+void wifi_scan();
 void init_led_cmd();
 
 void led_indicator_control(led_cmd_t command, uint32_t on_duration_ms,
