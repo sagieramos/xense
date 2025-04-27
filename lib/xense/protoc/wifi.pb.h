@@ -12,11 +12,9 @@
 /* Struct definitions */
 typedef PB_BYTES_ARRAY_T(6) Xense_Station_bssid_t;
 typedef struct _Xense_Station {
-  pb_size_t which_target;
-  union _Xense_Station_target {
-    char ssid[33];
-    Xense_Station_bssid_t bssid;
-  } target;
+  char ssid[33];
+  Xense_Station_bssid_t bssid;
+  bool bssid_set;
   char password[65];
 } Xense_Station;
 
@@ -42,7 +40,7 @@ extern "C" {
 
 /* Initializer values for message structs */
 #define Xense_Station_init_default                                             \
-  { 0, {""}, "" }
+  { "", {0, {0}}, 0, "" }
 #define Xense_AccessPoint_init_default                                         \
   { "", {0, {0}}, 0, 0, 0, 0, 0 }
 #define Xense_ScanResult_init_default                                          \
@@ -61,7 +59,7 @@ extern "C" {
     }                                                                          \
   }
 #define Xense_Station_init_zero                                                \
-  { 0, {""}, "" }
+  { "", {0, {0}}, 0, "" }
 #define Xense_AccessPoint_init_zero                                            \
   { "", {0, {0}}, 0, 0, 0, 0, 0 }
 #define Xense_ScanResult_init_zero                                             \
@@ -83,7 +81,8 @@ extern "C" {
 /* Field tags (for use in manual encoding/decoding) */
 #define Xense_Station_ssid_tag 1
 #define Xense_Station_bssid_tag 2
-#define Xense_Station_password_tag 3
+#define Xense_Station_bssid_set_tag 3
+#define Xense_Station_password_tag 4
 #define Xense_AccessPoint_ssid_tag 1
 #define Xense_AccessPoint_bssid_tag 2
 #define Xense_AccessPoint_rssi_tag 3
@@ -95,9 +94,10 @@ extern "C" {
 
 /* Struct field encoding specification for nanopb */
 #define Xense_Station_FIELDLIST(X, a)                                          \
-  X(a, STATIC, ONEOF, STRING, (target, ssid, target.ssid), 1)                  \
-  X(a, STATIC, ONEOF, BYTES, (target, bssid, target.bssid), 2)                 \
-  X(a, STATIC, SINGULAR, STRING, password, 3)
+  X(a, STATIC, SINGULAR, STRING, ssid, 1)                                      \
+  X(a, STATIC, SINGULAR, BYTES, bssid, 2)                                      \
+  X(a, STATIC, SINGULAR, BOOL, bssid_set, 3)                                   \
+  X(a, STATIC, SINGULAR, STRING, password, 4)
 #define Xense_Station_CALLBACK NULL
 #define Xense_Station_DEFAULT NULL
 
@@ -131,7 +131,7 @@ extern const pb_msgdesc_t Xense_ScanResult_msg;
 #define XENSE_WIFI_PB_H_MAX_SIZE Xense_ScanResult_size
 #define Xense_AccessPoint_size 97
 #define Xense_ScanResult_size 1980
-#define Xense_Station_size 100
+#define Xense_Station_size 110
 
 #ifdef __cplusplus
 } /* extern "C" */

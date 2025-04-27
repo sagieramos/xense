@@ -12,5 +12,7 @@ include/config_xense.h
 node_modules
 data/
 cert/
+wifi_qr_env/
+
 
 

@@ -5,11 +5,10 @@ import "nanopb.proto";
 package Xense;
 
 message Station {
-    oneof target {
-      string ssid = 1 [(nanopb).max_length = 32];
-      bytes bssid = 2 [(nanopb).max_size = 6];
-    }
-    string password = 3 [(nanopb).max_length = 64];
+    string ssid = 1 [(nanopb).max_length = 32];
+    bytes bssid = 2 [(nanopb).max_size = 6];
+    bool bssid_set = 3;
+    string password = 4 [(nanopb).max_length = 64];
   }
 
 message AccessPoint {

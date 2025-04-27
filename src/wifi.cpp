@@ -10,13 +10,14 @@
 static EventGroupHandle_t wifi_event_group;
 bool is_connected = false;
 
-// === LED BLINK ===
-static const wifi_sta_config_t sta_config = {
+Xense_Station nvs_sta;
+
+static wifi_sta_config_t sta_config = {
     .ssid = WIFI_SSID,
     .password = WIFI_PASS,
     .scan_method = WIFI_ALL_CHANNEL_SCAN,
     .bssid_set = false,
-    .bssid = {0x00, 0x5F, 0x67, 0x2D, 0xC2, 0x00},
+    .bssid = {0},
     .channel = 0,
     .listen_interval = 3,
     .sort_method = WIFI_CONNECT_AP_BY_SIGNAL,
@@ -51,7 +52,7 @@ wifi_config_t ap_config = {
            .ssid_len = 0, // 0 = use strlen of ssid
            .channel = 1,
            .authmode = WIFI_AUTH_WPA2_PSK,
-           .ssid_hidden = 0, // visible network
+           .ssid_hidden = 1, // visible network
            .max_connection = 4,
            .beacon_interval = 100, // in TUs, 102.4ms
            .csa_count = 3,         // standard default
@@ -128,6 +129,7 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
     LOG_XENSE(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
     xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
+    esp_wifi_set_mode(WIFI_MODE_APSTA);
     led_indicator_control(LED_CMD_SOLID_ON, 0, 0); // Solid ON
   }
 }
@@ -202,7 +204,8 @@ void wifi_init_ap_sta() {
 
   // Create network interfaces
   esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
-  esp_netif_create_default_wifi_ap();
+  esp_netif_t *ap_netif = esp_netif_create_default_wifi_ap();
+ 
 
   // Register only necessary events
   ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_START,
@@ -223,17 +226,31 @@ void wifi_init_ap_sta() {
                                              &wifi_event_handler, NULL));
 
   // Set hostname for STA interface (optional: can also set for AP if needed)
-  ESP_ERROR_CHECK(esp_netif_set_hostname(sta_netif, "xense"));
+  set_xense_hostname(sta_netif);
+  set_xense_ap_ssid(&ap_config);
+
+  
+  // ESP_ERROR_CHECK(esp_netif_set_hostname(sta_netif, "xense"));
 
   // Initialize Wi-Fi driver
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-  // Configure Wi-Fi mode
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
 
   // Set Wi-Fi configurations
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
+
+  if (load_station_config(&nvs_sta) == ESP_OK) {
+    LOG_XENSE(TAG, "Loaded station config from NVS");
+    strncpy((char *)sta_config.ssid, (char *)nvs_sta.ssid,
+            sizeof(sta_config.ssid));
+    strncpy((char *)sta_config.password, (char *)nvs_sta.password,
+            sizeof(sta_config.password));
+  } else {
+    LOG_XENSE(TAG, "Failed to load station config from NVS");
+  }
+
   ESP_ERROR_CHECK(
       esp_wifi_set_config(WIFI_IF_STA, (wifi_config_t *)&sta_config));
 

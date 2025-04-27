@@ -12,12 +12,16 @@
 #include "freertos/task.h"
 #include "nvs_flash.h"
 #include <string.h>
+#include "xense.h"
 
 #ifdef LOG_ENABLED
 #define LOG_XENSE(tag, ...) ESP_LOGI(tag, __VA_ARGS__)
 #else
 #define LOG_XENSE(tag, ...) ((void)0)
 #endif
+
+#define NVS_STORAGE_NAMESPACE "xense"
+#define NVS_WIFI_KEY "wifi_sta"
 
 const gpio_num_t LED_INDICATOR = GPIO_NUM_2;
 
@@ -54,5 +58,9 @@ void init_led_cmd();
 
 void led_indicator_control(led_cmd_t command, uint32_t on_duration_ms,
                            uint32_t off_duration_ms);
+esp_err_t save_station_config(const Xense_Station *station);
+esp_err_t load_station_config(Xense_Station *station);
+void set_xense_hostname(esp_netif_t *sta_netif);
+void set_xense_ap_ssid(wifi_config_t *ap_config);
 
 #endif // XENSE_UTILS_H
