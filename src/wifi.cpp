@@ -48,7 +48,7 @@ static wifi_sta_config_t sta_config = {
 
 wifi_config_t ap_config = {
     .ap = {.ssid = "xense_ap",
-           .password = "8128638936",
+           .password = "81286389",
            .ssid_len = 0, // 0 = use strlen of ssid
            .channel = 1,
            .authmode = WIFI_AUTH_WPA2_PSK,
@@ -204,8 +204,7 @@ void wifi_init_ap_sta() {
 
   // Create network interfaces
   esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
-  esp_netif_t *ap_netif = esp_netif_create_default_wifi_ap();
- 
+  esp_netif_create_default_wifi_ap();
 
   // Register only necessary events
   ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, WIFI_EVENT_STA_START,
@@ -229,7 +228,6 @@ void wifi_init_ap_sta() {
   set_xense_hostname(sta_netif);
   set_xense_ap_ssid(&ap_config);
 
-  
   // ESP_ERROR_CHECK(esp_netif_set_hostname(sta_netif, "xense"));
 
   // Initialize Wi-Fi driver

@@ -11,8 +11,8 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "nvs_flash.h"
-#include <string.h>
 #include "xense.h"
+#include <string.h>
 
 #ifdef LOG_ENABLED
 #define LOG_XENSE(tag, ...) ESP_LOGI(tag, __VA_ARGS__)
