@@ -13,6 +13,6 @@ node_modules
 data/
 cert/
 wifi_qr_env/
-
+pyvenv.cfg
 
 
