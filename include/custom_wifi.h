@@ -13,7 +13,6 @@
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_SCAN_DONE_BIT BIT1
-static EventGroupHandle_t wifi_event_group;
 
 extern wifi_config_t ap_config;
 extern wifi_scan_config_t scan_conf;

@@ -1,7 +1,10 @@
 #include "config_xense.h"
 #include "custom_wifi.h"
 #include "log.h"
+#include "server.h"
 #include "xense_utils.h"
+
+static EventGroupHandle_t wifi_event_group;
 
 Xense_Station nvs_sta;
 
@@ -292,45 +295,87 @@ void wifi_scan() {
 
 void wifi_scan_process_task(void *pvParameters) {
   while (true) {
-    EventBits_t bits = xEventGroupWaitBits(wifi_event_group, WIFI_SCAN_DONE_BIT,
+/*     EventBits_t bits = xEventGroupWaitBits(wifi_event_group, WIFI_SCAN_DONE_BIT,
                                            pdTRUE,  // Clear bit after receiving
                                            pdFALSE, // Only need one bit
                                            portMAX_DELAY // Wait forever
     );
+ */
+    uint16_t ap_num = 0;
+    esp_wifi_scan_get_ap_num(&ap_num);
 
-    if (bits & WIFI_SCAN_DONE_BIT) {
-      uint16_t ap_num = 0;
-      esp_wifi_scan_get_ap_num(&ap_num);
+    if (ap_num == 0) {
+      LOG_XENSE(CUSTOM_WIFI_TAG, "No APs found");
+      continue;
+    }
 
-      if (ap_num == 0) {
-        LOG_XENSE(CUSTOM_WIFI_TAG, "No APs found");
-        continue;
+    wifi_ap_record_t *ap_info =
+        (wifi_ap_record_t *)malloc(sizeof(wifi_ap_record_t) * ap_num);
+    if (ap_info == NULL) {
+      LOG_XENSE(CUSTOM_WIFI_TAG, "Memory allocation failed!");
+      continue;
+    }
+
+    if (esp_wifi_scan_get_ap_records(&ap_num, ap_info) == ESP_OK) {
+      // Logging for debugging
+      for (int i = 0; i < ap_num; i++) {
+        LOG_XENSE(CUSTOM_WIFI_TAG, "-------------------%d---------------------",
+                  1 + i);
+        LOG_XENSE(CUSTOM_WIFI_TAG, "SSID: %s", ap_info[i].ssid);
+        LOG_XENSE(CUSTOM_WIFI_TAG, "BSSID: " MACSTR, MAC2STR(ap_info[i].bssid));
+        LOG_XENSE(CUSTOM_WIFI_TAG, "RSSI: %d", ap_info[i].rssi);
+        LOG_XENSE(CUSTOM_WIFI_TAG, "Authmode: %d", ap_info[i].authmode);
+        LOG_XENSE(CUSTOM_WIFI_TAG, "Channel: %d", ap_info[i].primary);
+        LOG_XENSE(CUSTOM_WIFI_TAG, "WiFi Cipher: %d",
+                  ap_info[i].pairwise_cipher);
+        LOG_XENSE(CUSTOM_WIFI_TAG, "Bandwidth: %d", ap_info[i].bandwidth);
       }
 
-      wifi_ap_record_t *ap_info =
-          (wifi_ap_record_t *)malloc(sizeof(wifi_ap_record_t) * ap_num);
-      if (ap_info == NULL) {
-        LOG_XENSE(CUSTOM_WIFI_TAG, "Memory allocation failed!");
-        continue;
-      }
+      if (ws_server_handle != NULL && ws_socket_fd != -1) {
+        // Allocate buffer for JSON with large enough size to fit the AP
+        // information
+        char *json_buf =
+            (char *)malloc(4096); // Increased size to fit more fields
+        if (json_buf != NULL) {
+          int offset = 0;
+          offset += snprintf(json_buf + offset, 4096 - offset, "{\"aps\":[");
 
-      if (esp_wifi_scan_get_ap_records(&ap_num, ap_info) == ESP_OK) {
-        for (int i = 0; i < ap_num; i++) {
+          for (int i = 0; i < ap_num; i++) {
+            offset += snprintf(
+                json_buf + offset, 4096 - offset,
+                "{\"ssid\":\"%s\","
+                "\"bssid\":\"%02x:%02x:%02x:%02x:%02x:%02x\","
+                "\"rssi\":%d,"
+                "\"authmode\":%d,"
+                "\"cipher\":%d,"
+                "\"bandwidth\":%d"
+                "}%s",
+                ap_info[i].ssid, ap_info[i].bssid[0], ap_info[i].bssid[1],
+                ap_info[i].bssid[2], ap_info[i].bssid[3], ap_info[i].bssid[4],
+                ap_info[i].bssid[5], ap_info[i].rssi, ap_info[i].authmode,
+                ap_info[i].pairwise_cipher, ap_info[i].bandwidth,
+                (i == ap_num - 1) ? "" : ",");
+          }
+
+          offset += snprintf(json_buf + offset, 4096 - offset, "]}");
+
+          // Send the constructed JSON data over WebSocket
+          ws_trigger_async_send(ws_server_handle, NULL,
+                                (const uint8_t *)json_buf, strlen(json_buf),
+                                WS_SEND_MODE_UNICAST, false);
+
+          // Free the JSON buffer after sending
+          free(json_buf);
+        } else {
           LOG_XENSE(CUSTOM_WIFI_TAG,
-                    "-------------------%d---------------------", 1 + i);
-          LOG_XENSE(CUSTOM_WIFI_TAG, "SSID: %s", ap_info[i].ssid);
-          LOG_XENSE(CUSTOM_WIFI_TAG, "BSSID: " MACSTR,
-                    MAC2STR(ap_info[i].bssid));
-          LOG_XENSE(CUSTOM_WIFI_TAG, "RSSI: %d", ap_info[i].rssi);
-          LOG_XENSE(CUSTOM_WIFI_TAG, "Authmode: %d", ap_info[i].authmode);
-          LOG_XENSE(CUSTOM_WIFI_TAG, "Channel: %d", ap_info[i].primary);
-          LOG_XENSE(CUSTOM_WIFI_TAG, "WiFi Cipher: %d",
-                    ap_info[i].pairwise_cipher);
-          LOG_XENSE(CUSTOM_WIFI_TAG, "Bandwidth: %d", ap_info[i].bandwidth);
+                    "Failed to allocate memory for JSON buffer");
         }
       }
-
-      free(ap_info);
+    } else {
+      LOG_XENSE(CUSTOM_WIFI_TAG, "Failed to get AP records");
     }
+
+    // Free the allocated memory for AP information after the scan
+    free(ap_info);
   }
 }
