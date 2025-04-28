@@ -1,5 +1,5 @@
+#include "custom_wifi.h"
 #include "xense.h"
-#include "xense_utils.h"
 
 esp_err_t save_station_config(const Xense_Station *station) {
   nvs_handle_t handle;

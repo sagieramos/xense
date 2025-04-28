@@ -1,5 +1,6 @@
 #include "xense_utils.h"
 #include "esp_mac.h"
+#include "log.h"
 
 #define TASK "TASK"
 #define LED_QUEUE_LENGTH 5
@@ -133,31 +134,4 @@ void init_led_cmd() {
   gpio_set_direction(LED_INDICATOR, GPIO_MODE_OUTPUT);
   led_cmd_queue = xQueueCreate(LED_QUEUE_LENGTH, sizeof(led_msg_t));
   xTaskCreate(led_task, "led_task", 2048, NULL, 5, NULL);
-}
-
-void set_xense_hostname(esp_netif_t *netif) {
-  uint8_t mac[6];
-  esp_read_mac(mac, ESP_MAC_WIFI_STA); // Read the MAC address
-
-  uint32_t mac_decimal = (mac[3] << 16) | (mac[4] << 8) | (mac[5]);
-
-  char hostname[32];
-  snprintf(hostname, sizeof(hostname), "xense%lu", (unsigned long)mac_decimal);
-
-  esp_netif_set_hostname(netif, hostname);
-
-  ESP_LOGI("HOSTNAME", "Set hostname to: %s", hostname);
-}
-
-void set_xense_ap_ssid(wifi_config_t *ap_config) {
-  uint8_t mac[6];
-  esp_read_mac(mac, ESP_MAC_WIFI_STA); // Read the STA MAC
-
-  uint32_t mac_decimal = (mac[3] << 16) | (mac[4] << 8) | (mac[5]);
-
-  snprintf((char *)ap_config->ap.ssid, sizeof(ap_config->ap.ssid),
-           "xense%lu_ap", (unsigned long)mac_decimal);
-  ap_config->ap.ssid_len = 0; // 0 = auto strlen(ssid)
-
-  ESP_LOGI("AP_SSID", "Updated AP SSID to: %s", ap_config->ap.ssid);
 }

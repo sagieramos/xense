@@ -3,7 +3,6 @@
 
 #include "driver/gpio.h"
 #include "esp_https_server.h"
-#include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_netif.h"
 #include "esp_tls.h"
@@ -13,15 +12,6 @@
 #include "nvs_flash.h"
 #include "xense.h"
 #include <string.h>
-
-#ifdef LOG_ENABLED
-#define LOG_XENSE(tag, ...) ESP_LOGI(tag, __VA_ARGS__)
-#else
-#define LOG_XENSE(tag, ...) ((void)0)
-#endif
-
-#define NVS_STORAGE_NAMESPACE "xense"
-#define NVS_WIFI_KEY "wifi_sta"
 
 const gpio_num_t LED_INDICATOR = GPIO_NUM_2;
 
@@ -49,18 +39,8 @@ void control_task(TaskHandle_t &task, TaskControlAction action,
                   uint32_t stackDepth, void *parameters, UBaseType_t priority);
 
 unsigned long get_current_ms();
-
-void wifi_init_sta();
-void wifi_init_ap();
-void wifi_init_ap_sta();
-void wifi_scan();
 void init_led_cmd();
-
 void led_indicator_control(led_cmd_t command, uint32_t on_duration_ms,
                            uint32_t off_duration_ms);
-esp_err_t save_station_config(const Xense_Station *station);
-esp_err_t load_station_config(Xense_Station *station);
-void set_xense_hostname(esp_netif_t *sta_netif);
-void set_xense_ap_ssid(wifi_config_t *ap_config);
 
 #endif // XENSE_UTILS_H

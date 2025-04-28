@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wi-Fi Scanner</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Wi-Fi Networks</h1>
+    <button id="scanButton">Scan Wi-Fi</button>
+    <div id="loading" style="display:none;">Scanning...</div>
+    <table id="wifiTable">
+      <thead>
+        <tr>
+          <th>SSID</th>
+          <th>Signal Strength (RSSI)</th>
+          <th>Channel</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Wi-Fi networks will be dynamically added here -->
+      </tbody>
+    </table>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
