@@ -35,8 +35,7 @@ static wifi_sta_config_t sta_config = {
     .password = WIFI_PASS,
     .scan_method = WIFI_ALL_CHANNEL_SCAN,
     .bssid_set = true,
-    // fc:3f:fc:90:92:91
-    .bssid = {0xFC, 0x3F, 0xFC, 0x90, 0x92, 0x91},
+    .bssid = BSSID,
     .channel = 0,
     .listen_interval = 3,
     .sort_method = WIFI_CONNECT_AP_BY_SIGNAL,
