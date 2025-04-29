@@ -25,7 +25,8 @@ typedef enum {
 typedef enum {
   LED_CMD_BLINK_CUSTOM,
   LED_CMD_SOLID_ON,
-  LED_CMD_SOLID_OFF
+  LED_CMD_SOLID_OFF,
+  LED_CMD_BLINK_ONCE
 } led_cmd_t;
 
 typedef struct {

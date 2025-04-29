@@ -1,8 +1,11 @@
 #include "custom_wifi.h"
 #include "log.h"
 #include "server.h"
+#include "xense_utils.h"
 
 const char *TAG = "WebSocket Server";
+static TickType_t last_scan_tick = 0;
+static portMUX_TYPE scan_mux = portMUX_INITIALIZER_UNLOCKED;
 
 httpd_handle_t ws_server_handle = NULL;
 int ws_socket_fd = -1;
@@ -51,34 +54,37 @@ esp_err_t ws_trigger_async_send(httpd_handle_t server, httpd_req_t *req,
   resp_arg->hd = server;
   resp_arg->mode = mode;
   resp_arg->is_binary = is_binary;
+
+  // Copy payload (limit to internal buffer size)
   resp_arg->payload_len =
       len > sizeof(resp_arg->payload) ? sizeof(resp_arg->payload) : len;
   memcpy(resp_arg->payload, data, resp_arg->payload_len);
 
   if (mode == WS_SEND_MODE_UNICAST) {
-    if (req == NULL) {
+    if (req != NULL) {
+      resp_arg->fd = httpd_req_to_sockfd(req);
+    } else if (ws_socket_fd != -1) {
+      resp_arg->fd = ws_socket_fd;
+    } else {
       free(resp_arg);
+      LOG_XENSE("WebSocket Server",
+                "Invalid argument: req is NULL and ws_socket_fd is not set");
       return ESP_ERR_INVALID_ARG;
     }
-    resp_arg->fd = httpd_req_to_sockfd(req);
   } else {
-    resp_arg->fd = -1; // For broadcasting, no specific client fd is needed
+    resp_arg->fd = -1; // For broadcast mode
   }
 
   return httpd_queue_work(server, ws_async_send, resp_arg);
 }
-
-// Function to handle WebSocket requests
-// This function is called when a WebSocket connection is established
-// and when messages are received from the client.
-// It handles both text and binary messages, and can also send messages back to
-// the client.
 
 esp_err_t handle_ws_req(httpd_req_t *req) {
   if (req->method == HTTP_GET) {
     LOG_XENSE(TAG, "Handshake done, a new connection was opened");
     return ESP_OK;
   }
+
+  led_indicator_control(LED_CMD_BLINK_ONCE, 100, 100);
 
   httpd_ws_frame_t ws_pkt;
   uint8_t *buf = NULL;
@@ -98,8 +104,7 @@ esp_err_t handle_ws_req(httpd_req_t *req) {
             ws_pkt.len);
 
   if (ws_pkt.len > 0) {
-    buf = (uint8_t *)calloc(1,
-                            ws_pkt.len + 1); // +1 for null-terminator if needed
+    buf = (uint8_t *)calloc(1, ws_pkt.len + 1);
     if (buf == NULL) {
       LOG_XENSE(TAG, "Failed to allocate memory for frame payload");
       return ESP_ERR_NO_MEM;
@@ -116,16 +121,27 @@ esp_err_t handle_ws_req(httpd_req_t *req) {
     }
   }
 
-  // Step 3: Handle based on frame type
   if (ws_pkt.type == HTTPD_WS_TYPE_TEXT) {
     LOG_XENSE(TAG, "Received TEXT message: %s",
               ws_pkt.payload ? (char *)ws_pkt.payload : "(null)");
 
     if (ws_pkt.payload && strcmp((char *)ws_pkt.payload, "scan") == 0) {
-      // free(buf);
-      //  Call the wifi_scan function
       ws_server_handle = req->handle;
       ws_socket_fd = httpd_req_to_sockfd(req);
+
+      // Use a mutex to protect the scan cooldown
+      TickType_t now = xTaskGetTickCount();
+      taskENTER_CRITICAL(&scan_mux);
+      if (now - last_scan_tick < pdMS_TO_TICKS(2000)) {
+        taskEXIT_CRITICAL(&scan_mux);
+        LOG_XENSE(TAG, "Scan request ignored due to cooldown");
+        free(buf);
+        return ESP_OK;
+      }
+      last_scan_tick = now;
+      taskEXIT_CRITICAL(&scan_mux);
+
+      LOG_XENSE(TAG, "Received scan request");
       wifi_scan(); // Start scan
       free(buf);
       return ESP_OK;

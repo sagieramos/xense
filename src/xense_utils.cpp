@@ -95,26 +95,55 @@ static void led_task(void *arg) {
                            .on_duration_ms = 500,
                            .off_duration_ms = 500};
 
+  led_msg_t previous_cmd = current_cmd;
+  bool blink_once_triggered = false;
+
   while (true) {
     led_msg_t new_cmd;
-    if (xQueueReceive(led_cmd_queue, &new_cmd, 0)) {
+    if (xQueueReceive(led_cmd_queue, &new_cmd,
+                      blink_once_triggered ? 0 : pdMS_TO_TICKS(50))) {
+      if (new_cmd.command != LED_CMD_BLINK_ONCE) {
+        previous_cmd = new_cmd;
+      }
       current_cmd = new_cmd;
     }
 
     switch (current_cmd.command) {
+    case LED_CMD_BLINK_ONCE: {
+      blink_once_triggered = true;
+      int initial_state = gpio_get_level(LED_INDICATOR);
+
+      gpio_set_level(LED_INDICATOR, !initial_state);
+      vTaskDelay(pdMS_TO_TICKS(current_cmd.on_duration_ms));
+
+      gpio_set_level(LED_INDICATOR, initial_state);
+      vTaskDelay(pdMS_TO_TICKS(current_cmd.off_duration_ms));
+
+      // Revert to previous mode
+      current_cmd = previous_cmd;
+      blink_once_triggered = false;
+      break;
+    }
     case LED_CMD_BLINK_CUSTOM:
       gpio_set_level(LED_INDICATOR, 1);
-      vTaskDelay(current_cmd.on_duration_ms / portTICK_PERIOD_MS);
+      vTaskDelay(pdMS_TO_TICKS(current_cmd.on_duration_ms));
       gpio_set_level(LED_INDICATOR, 0);
-      vTaskDelay(current_cmd.off_duration_ms / portTICK_PERIOD_MS);
+      vTaskDelay(pdMS_TO_TICKS(current_cmd.off_duration_ms));
       break;
+
     case LED_CMD_SOLID_ON:
       gpio_set_level(LED_INDICATOR, 1);
-      vTaskDelay(100 / portTICK_PERIOD_MS);
+      vTaskDelay(pdMS_TO_TICKS(200));
       break;
+
     case LED_CMD_SOLID_OFF:
       gpio_set_level(LED_INDICATOR, 0);
-      vTaskDelay(100 / portTICK_PERIOD_MS);
+      vTaskDelay(pdMS_TO_TICKS(200));
+      break;
+
+    default:
+      gpio_set_level(LED_INDICATOR, 0);
+      vTaskDelay(pdMS_TO_TICKS(200));
       break;
     }
   }

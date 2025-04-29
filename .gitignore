@@ -10,7 +10,6 @@ include/python*
 include/config_xense.h
 .env/
 node_modules
-data/
 cert/
 wifi_qr_env/
 pyvenv.cfg

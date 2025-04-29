@@ -34,8 +34,9 @@ static wifi_sta_config_t sta_config = {
     .ssid = WIFI_SSID,
     .password = WIFI_PASS,
     .scan_method = WIFI_ALL_CHANNEL_SCAN,
-    .bssid_set = false,
-    .bssid = {0},
+    .bssid_set = true,
+    // fc:3f:fc:90:92:91
+    .bssid = {0xFC, 0x3F, 0xFC, 0x90, 0x92, 0x91},
     .channel = 0,
     .listen_interval = 3,
     .sort_method = WIFI_CONNECT_AP_BY_SIGNAL,
@@ -93,7 +94,6 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
 
     case WIFI_EVENT_STA_DISCONNECTED:
       LOG_XENSE(CUSTOM_WIFI_TAG, "Disconnected. Reconnecting...");
-      xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
       esp_wifi_connect();
       led_indicator_control(LED_CMD_BLINK_CUSTOM, 500, 500); // Slow blink
       break;
@@ -131,11 +131,6 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
 
     case WIFI_EVENT_SCAN_DONE:
       LOG_XENSE(CUSTOM_WIFI_TAG, "Wi-Fi scan completed");
-      if (xEventGroupGetBits(wifi_event_group) & WIFI_CONNECTED_BIT) {
-        led_indicator_control(LED_CMD_SOLID_ON, 0, 0); // Solid ON
-      } else {
-        led_indicator_control(LED_CMD_BLINK_CUSTOM, 500, 500); // Slow blink
-      }
       xEventGroupSetBits(wifi_event_group, WIFI_SCAN_DONE_BIT);
       break;
     }
@@ -295,12 +290,12 @@ void wifi_scan() {
 
 void wifi_scan_process_task(void *pvParameters) {
   while (true) {
-/*     EventBits_t bits = xEventGroupWaitBits(wifi_event_group, WIFI_SCAN_DONE_BIT,
-                                           pdTRUE,  // Clear bit after receiving
-                                           pdFALSE, // Only need one bit
-                                           portMAX_DELAY // Wait forever
+    xEventGroupWaitBits(wifi_event_group, WIFI_SCAN_DONE_BIT,
+                        pdTRUE,       // Clear bit after receiving
+                        pdFALSE,      // Only need one bit
+                        portMAX_DELAY // Wait forever
     );
- */
+
     uint16_t ap_num = 0;
     esp_wifi_scan_get_ap_num(&ap_num);
 
