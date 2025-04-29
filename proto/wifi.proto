@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+import "nanopb.proto";
+
+package Xense;
+
+message Station {
+    string ssid = 1 [(nanopb).max_length = 32];
+    bytes bssid = 2 [(nanopb).max_size = 6];
+    bool bssid_set = 3;
+    string password = 4 [(nanopb).max_length = 64];
+  }
+
+message AccessPoint {
+    string ssid = 1 [(nanopb).max_length = 32];
+    bytes bssid = 2 [(nanopb).max_size = 6];      
+    int32 rssi = 3;
+    int32 authmode = 4;
+    int32 channel = 5;
+    int32 pairwise_cipher = 6;
+    int32 bandwidth = 7;
+  }
+  
+  message ScanResult {
+    repeated AccessPoint access_points = 1 [(nanopb).max_count = 20];
+  }

@@ -5,6 +5,7 @@
 #include "../../external/nanopb/pb_common.h"
 #include "../../external/nanopb/pb_decode.h"
 #include "../../external/nanopb/pb_encode.h"
+#include "./protoc/wifi.pb.h"
 #include "./protoc/xense.pb.h"
 
 /* Type Identifiers (for use in manual encoding/decoding) */

@@ -1,26 +1,47 @@
 #ifndef XENSE_UTILS_H
 #define XENSE_UTILS_H
 
-#include <Arduino.h>
+#include "driver/gpio.h"
+#include "esp_https_server.h"
+#include "esp_mac.h"
+#include "esp_netif.h"
+#include "esp_tls.h"
+#include "esp_wifi.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "nvs_flash.h"
+#include "xense.h"
+#include <string.h>
 
-#ifdef LOG_ENABLED
-#define LOG_BEGIN(baud) Serial.begin(baud)
-#define LOG_(...) Serial.print(__VA_ARGS__)
-#define LOG_LN(...) Serial.println(__VA_ARGS__)
-#define LOG_F(...) Serial.printf(__VA_ARGS__)
-#else
-#define LOG_BEGIN(baud) ((void)0)
-#define LOG_(...) ((void)0)
-#define LOG_LN(...) ((void)0)
-#define LOG_F(...) ((void)0)
-#endif
+const gpio_num_t LED_INDICATOR = GPIO_NUM_2;
 
-enum TaskControlAction { TASK_RESUME, TASK_SUSPEND, TASK_DELETE, TASK_RESTART };
+typedef enum {
+  TASK_RESUME,
+  TASK_SUSPEND,
+  TASK_DELETE,
+  TASK_RESTART
+} TaskControlAction;
+
+typedef enum {
+  LED_CMD_BLINK_CUSTOM,
+  LED_CMD_SOLID_ON,
+  LED_CMD_SOLID_OFF,
+  LED_CMD_BLINK_ONCE
+} led_cmd_t;
+
+typedef struct {
+  led_cmd_t command;
+  uint32_t on_duration_ms;  // Used in BLINK_CUSTOM
+  uint32_t off_duration_ms; // Used in BLINK_CUSTOM
+} led_msg_t;
 
 void control_task(TaskHandle_t &task, TaskControlAction action,
-                  TaskFunction_t taskFunction = nullptr,
-                  const char *taskName = nullptr, uint32_t stackDepth = 2048,
-                  void *parameters = nullptr, UBaseType_t priority = 1);
-unsigned long get_current_ms();
+                  TaskFunction_t taskFunction, const char *taskName,
+                  uint32_t stackDepth, void *parameters, UBaseType_t priority);
 
-#endif // UTILS_H
+unsigned long get_current_ms();
+void init_led_cmd();
+void led_indicator_control(led_cmd_t command, uint32_t on_duration_ms,
+                           uint32_t off_duration_ms);
+
+#endif // XENSE_UTILS_H

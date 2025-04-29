@@ -16,7 +16,7 @@ SRC_FILES="$SRC_FILE \
            ./utils.cpp \
            ./utils.h \
            ../lib/xense/*.cpp \
-           ../lib/xense/protoc/xense.pb.c \
+           ../lib/xense/protoc/* \
            ../external/nanopb/pb_encode.c \
            ../external/nanopb/pb_decode.c \
            ../external/nanopb/pb_common.c"

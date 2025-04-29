@@ -7,6 +7,12 @@
 lib/python*
 lib64
 include/python*
-venv/
+include/config_xense.h
 .env/
 node_modules
+cert/
+wifi_qr_env/
+pyvenv.cfg
+
+
+
