@@ -1,5 +1,4 @@
 #include "custom_wifi.h"
-#include "log.h"
 #include "server.h"
 #include "xense_utils.h"
 
@@ -67,8 +66,8 @@ esp_err_t ws_trigger_async_send(httpd_handle_t server, httpd_req_t *req,
       resp_arg->fd = ws_socket_fd;
     } else {
       free(resp_arg);
-      LOG_XENSE("WebSocket Server",
-                "Invalid argument: req is NULL and ws_socket_fd is not set");
+      ESP_LOGE("WebSocket Server",
+        "Invalid argument: req is NULL and ws_socket_fd is not set");
       return ESP_ERR_INVALID_ARG;
     }
   } else {
@@ -80,7 +79,7 @@ esp_err_t ws_trigger_async_send(httpd_handle_t server, httpd_req_t *req,
 
 esp_err_t handle_ws_req(httpd_req_t *req) {
   if (req->method == HTTP_GET) {
-    LOG_XENSE(TAG, "Handshake done, a new connection was opened");
+    ESP_LOGI(TAG, "Handshake done, a new connection was opened");
     return ESP_OK;
   }
 
@@ -94,64 +93,57 @@ esp_err_t handle_ws_req(httpd_req_t *req) {
 
   ret = httpd_ws_recv_frame(req, &ws_pkt, 0);
   if (ret != ESP_OK) {
-    LOG_XENSE(TAG,
-              "httpd_ws_recv_frame failed to get frame length with error %d",
-              ret);
+    ESP_LOGE(TAG, "Failed to get frame length. Error: %d", ret);
     return ret;
   }
 
-  LOG_XENSE(TAG, "Received frame of type %d and length %d", ws_pkt.type,
-            ws_pkt.len);
+  ESP_LOGI(TAG, "Received frame of type %d and length %d", ws_pkt.type, ws_pkt.len);
 
   if (ws_pkt.len > 0) {
     buf = (uint8_t *)calloc(1, ws_pkt.len + 1);
     if (buf == NULL) {
-      LOG_XENSE(TAG, "Failed to allocate memory for frame payload");
+      ESP_LOGE(TAG, "Failed to allocate memory for frame payload");
       return ESP_ERR_NO_MEM;
     }
 
     ws_pkt.payload = buf;
     ret = httpd_ws_recv_frame(req, &ws_pkt, ws_pkt.len);
     if (ret != ESP_OK) {
-      LOG_XENSE(TAG,
-                "httpd_ws_recv_frame failed to receive payload with error %d",
-                ret);
+      ESP_LOGE(TAG, "Failed to receive frame payload. Error: %d", ret);
       free(buf);
       return ret;
     }
   }
 
   if (ws_pkt.type == HTTPD_WS_TYPE_TEXT) {
-    LOG_XENSE(TAG, "Received TEXT message: %s",
-              ws_pkt.payload ? (char *)ws_pkt.payload : "(null)");
+    ESP_LOGI(TAG, "Received TEXT message: %s", ws_pkt.payload ? (char *)ws_pkt.payload : "(null)");
 
     if (ws_pkt.payload && strcmp((char *)ws_pkt.payload, "scan") == 0) {
       ws_server_handle = req->handle;
       ws_socket_fd = httpd_req_to_sockfd(req);
 
-      // Use a mutex to protect the scan cooldown
+      // Use a mutex to protect scan cooldown
       TickType_t now = xTaskGetTickCount();
       taskENTER_CRITICAL(&scan_mux);
       if (now - last_scan_tick < pdMS_TO_TICKS(2000)) {
         taskEXIT_CRITICAL(&scan_mux);
-        LOG_XENSE(TAG, "Scan request ignored due to cooldown");
+        ESP_LOGW(TAG, "Scan request ignored due to cooldown");
         free(buf);
         return ESP_OK;
       }
       last_scan_tick = now;
       taskEXIT_CRITICAL(&scan_mux);
 
-      LOG_XENSE(TAG, "Received scan request");
-      wifi_scan(); // Start scan
+      ESP_LOGI(TAG, "Received scan request");
+      wifi_scan();  // Start scan
       free(buf);
       return ESP_OK;
     }
-
   } else if (ws_pkt.type == HTTPD_WS_TYPE_BINARY) {
-    LOG_XENSE(TAG, "Received BINARY message of %d bytes", ws_pkt.len);
-    // TODO: Handle binary payload here (e.g., parse Protocol Buffers, etc.)
+    ESP_LOGI(TAG, "Received BINARY message of %d bytes", ws_pkt.len);
+    // TODO: Handle binary data here (e.g., parsing Protocol Buffers)
   } else {
-    LOG_XENSE(TAG, "Unhandled WebSocket frame type: %d", ws_pkt.type);
+    ESP_LOGW(TAG, "Unhandled WebSocket frame type: %d", ws_pkt.type);
   }
 
   if (buf) {

@@ -1,5 +1,4 @@
 #include "server.h"
-#include "log.h"
 
 httpd_handle_t server = NULL;
 

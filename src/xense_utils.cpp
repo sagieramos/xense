@@ -1,6 +1,6 @@
 #include "xense_utils.h"
 #include "esp_mac.h"
-#include "log.h"
+#include "esp_log.h"
 
 #define TASK "TASK"
 #define LED_QUEUE_LENGTH 5
@@ -8,67 +8,52 @@ static QueueHandle_t led_cmd_queue;
 
 /**
  * @brief Control a FreeRTOS task.
- *
- * This function can be used to resume, suspend, delete, or restart a FreeRTOS
- * task.
- *
- * @param task The task handle to control.
- * @param action The action to perform on the task (resume, suspend, delete,
- * restart).
- * @param taskFunction The function to run in the task (only used for restart).
- * @param taskName The name of the task (only used for restart).
- * @param stackDepth The stack depth for the task (only used for restart).
- * @param parameters The parameters to pass to the task function (only used for
- * restart).
- * @param priority The priority of the task (only used for restart).
  */
-
-void control_task(TaskHandle_t &task, TaskControlAction action,
+void control_task(TaskHandle_t *task, TaskControlAction action,
                   TaskFunction_t taskFunction, const char *taskName,
                   uint32_t stackDepth, void *parameters, UBaseType_t priority) {
   if (task == NULL && action != TASK_RESTART) {
-    LOG_XENSE(TASK, "NULL");
+    ESP_LOGE(TASK, "Task handle is NULL");
     return;
   }
 
   switch (action) {
   case TASK_RESUME:
-    if (eTaskGetState(task) == eSuspended) {
-      vTaskResume(task);
-
-      LOG_XENSE(TASK, "%s Resume\n", pcTaskGetName(task));
+    if (eTaskGetState(*task) == eSuspended) {
+      vTaskResume(*task);
+      ESP_LOGI(TASK, "%s Resume", pcTaskGetName(*task));
     } else {
-      LOG_XENSE(TASK, "%s already running\n", pcTaskGetName(task));
+      ESP_LOGW(TASK, "%s already running", pcTaskGetName(*task));
     }
     break;
 
   case TASK_SUSPEND:
-    if (eTaskGetState(task) != eSuspended) {
-      vTaskSuspend(task);
-      LOG_XENSE(TASK, "%s suspended\n", pcTaskGetName(task));
+    if (eTaskGetState(*task) != eSuspended) {
+      vTaskSuspend(*task);
+      ESP_LOGI(TASK, "%s suspended", pcTaskGetName(*task));
     } else {
-      LOG_XENSE(TASK, "%s already suspended\n", pcTaskGetName(task));
+      ESP_LOGW(TASK, "%s already suspended", pcTaskGetName(*task));
     }
     break;
 
   case TASK_DELETE:
-    vTaskDelete(task);
-    LOG_XENSE("Deleted task\n");
-    task = NULL;
+    vTaskDelete(*task);
+    ESP_LOGI(TASK, "Deleted task");
+    *task = NULL;
     break;
 
   case TASK_RESTART:
-    if (task != NULL) {
-      vTaskDelete(task);
-      LOG_XENSE("Deleted task for restart\n");
-      task = NULL;
+    if (*task != NULL) {
+      vTaskDelete(*task);
+      ESP_LOGI(TASK, "Deleted task for restart");
+      *task = NULL;
     }
     if (taskFunction != nullptr && taskName != nullptr) {
       xTaskCreatePinnedToCore(taskFunction, taskName, stackDepth, parameters,
-                              priority, &task, 1);
-      LOG_XENSE(TASK, "%s Restarted\n", taskName);
+                              priority, task, 1);
+      ESP_LOGI(TASK, "%s Restarted", taskName);
     } else {
-      LOG_XENSE(TASK, "Cannot restart: taskFunction or taskName is NULL");
+      ESP_LOGE(TASK, "Cannot restart: taskFunction or taskName is NULL");
     }
     break;
   }
@@ -76,13 +61,7 @@ void control_task(TaskHandle_t &task, TaskControlAction action,
 
 /**
  * @brief Get the current time in milliseconds.
- *
- * This function returns the current time in milliseconds since the system
- * started.
- *
- * @return The current time in milliseconds.
  */
-
 unsigned long get_current_ms() {
   return xTaskGetTickCount() * portTICK_PERIOD_MS;
 }
@@ -142,6 +121,7 @@ static void led_task(void *arg) {
       break;
 
     default:
+      ESP_LOGW("LED", "Unknown command received: %d", current_cmd.command);
       gpio_set_level(LED_INDICATOR, 0);
       vTaskDelay(pdMS_TO_TICKS(200));
       break;

@@ -1,6 +1,5 @@
 #include "config_xense.h"
 #include "custom_wifi.h"
-#include "log.h"
 #include "server.h"
 #include "xense_utils.h"
 
@@ -86,35 +85,35 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
   if (event_base == WIFI_EVENT) {
     switch (event_id) {
     case WIFI_EVENT_STA_START:
-      LOG_XENSE(CUSTOM_WIFI_TAG, "Wi-Fi started. Connecting...");
+      ESP_LOGI(CUSTOM_WIFI_TAG, "Wi-Fi started. Connecting...");
       esp_wifi_connect();
       led_indicator_control(LED_CMD_BLINK_CUSTOM, 100, 100); // Fast blink
       break;
 
     case WIFI_EVENT_STA_DISCONNECTED:
-      LOG_XENSE(CUSTOM_WIFI_TAG, "Disconnected. Reconnecting...");
+      ESP_LOGW(CUSTOM_WIFI_TAG, "Disconnected. Reconnecting...");
       esp_wifi_connect();
       led_indicator_control(LED_CMD_BLINK_CUSTOM, 500, 500); // Slow blink
       break;
 
     case WIFI_EVENT_AP_START:
-      LOG_XENSE(CUSTOM_WIFI_TAG, "Access Point started");
+      ESP_LOGI(CUSTOM_WIFI_TAG, "Access Point started");
       break;
 
     case WIFI_EVENT_AP_STACONNECTED: {
       wifi_event_ap_staconnected_t *event =
           (wifi_event_ap_staconnected_t *)event_data;
-      LOG_XENSE(CUSTOM_WIFI_TAG, "Station connected, MAC: " MACSTR ", AID: %d",
-                MAC2STR(event->mac), event->aid);
+      ESP_LOGI(CUSTOM_WIFI_TAG, "Station connected, MAC: " MACSTR ", AID: %d",
+               MAC2STR(event->mac), event->aid);
       break;
     }
 
     case WIFI_EVENT_STA_CONNECTED: {
       wifi_event_sta_connected_t *event =
           (wifi_event_sta_connected_t *)event_data;
-      LOG_XENSE(CUSTOM_WIFI_TAG,
-                "Station connected to AP, SSID: %s, BSSID: " MACSTR,
-                event->ssid, MAC2STR(event->bssid));
+      ESP_LOGI(CUSTOM_WIFI_TAG,
+               "Station connected to AP, SSID: %s, BSSID: " MACSTR,
+               event->ssid, MAC2STR(event->bssid));
       break;
     }
 
@@ -122,21 +121,21 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
       wifi_event_ap_stadisconnected_t *event =
           (wifi_event_ap_stadisconnected_t *)event_data;
       xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
-      LOG_XENSE(CUSTOM_WIFI_TAG,
-                "Station disconnected, MAC: " MACSTR ", AID: %d",
-                MAC2STR(event->mac), event->aid);
+      ESP_LOGW(CUSTOM_WIFI_TAG,
+               "Station disconnected, MAC: " MACSTR ", AID: %d",
+               MAC2STR(event->mac), event->aid);
       break;
     }
 
     case WIFI_EVENT_SCAN_DONE:
-      LOG_XENSE(CUSTOM_WIFI_TAG, "Wi-Fi scan completed");
+      ESP_LOGI(CUSTOM_WIFI_TAG, "Wi-Fi scan completed");
       xEventGroupSetBits(wifi_event_group, WIFI_SCAN_DONE_BIT);
       break;
     }
 
   } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-    LOG_XENSE(CUSTOM_WIFI_TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
+    ESP_LOGI(CUSTOM_WIFI_TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
     xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
     esp_wifi_set_mode(WIFI_MODE_APSTA);
     led_indicator_control(LED_CMD_SOLID_ON, 0, 0); // Solid ON
@@ -172,7 +171,7 @@ void wifi_init_sta(void) {
 
   ESP_ERROR_CHECK(esp_wifi_start());
 
-  LOG_XENSE(CUSTOM_WIFI_TAG, "Wi-Fi configured and started.");
+  ESP_LOGI(CUSTOM_WIFI_TAG, "Wi-Fi configured and started.");
 }
 
 void wifi_init_ap() {
@@ -199,7 +198,7 @@ void wifi_init_ap() {
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
   ESP_ERROR_CHECK(esp_wifi_start());
 
-  LOG_XENSE("WiFiModule", "AP started. SSID:%s password:%s", ap_config.ap.ssid,
+  ESP_LOGI("WiFiModule", "AP started. SSID:%s password:%s", ap_config.ap.ssid,
             ap_config.ap.password);
 }
 
@@ -249,13 +248,13 @@ void wifi_init_ap_sta() {
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
 
   if (load_station_config(&nvs_sta) == ESP_OK) {
-    LOG_XENSE(CUSTOM_WIFI_TAG, "Loaded station config from NVS");
+    ESP_LOGI(CUSTOM_WIFI_TAG, "Loaded station config from NVS");
     strncpy((char *)sta_config.ssid, (char *)nvs_sta.ssid,
             sizeof(sta_config.ssid));
     strncpy((char *)sta_config.password, (char *)nvs_sta.password,
             sizeof(sta_config.password));
   } else {
-    LOG_XENSE(CUSTOM_WIFI_TAG, "Failed to load station config from NVS");
+    ESP_LOGW(CUSTOM_WIFI_TAG, "Failed to load station config from NVS");
   }
 
   ESP_ERROR_CHECK(
@@ -267,7 +266,7 @@ void wifi_init_ap_sta() {
   // Initiate connection for STA
   ESP_ERROR_CHECK(esp_wifi_connect());
 
-  LOG_XENSE(CUSTOM_WIFI_TAG, "AP and STA mode started.");
+  ESP_LOGI(CUSTOM_WIFI_TAG, "AP and STA mode started.");
 }
 
 void wifi_scan() {
@@ -275,11 +274,11 @@ void wifi_scan() {
   wifi_mode_t mode;
   esp_err_t err = esp_wifi_get_mode(&mode);
   if (err != ESP_OK) {
-    LOG_XENSE(CUSTOM_WIFI_TAG, "Failed to get Wi-Fi mode");
+    ESP_LOGE(CUSTOM_WIFI_TAG, "Failed to get Wi-Fi mode");
     return;
   }
   if (mode != WIFI_MODE_STA && mode != WIFI_MODE_APSTA) {
-    LOG_XENSE(CUSTOM_WIFI_TAG, "Wi-Fi mode is not STA or APSTA");
+    ESP_LOGE(CUSTOM_WIFI_TAG, "Wi-Fi mode is not STA or APSTA");
     return;
   }
 #endif
@@ -299,30 +298,29 @@ void wifi_scan_process_task(void *pvParameters) {
     esp_wifi_scan_get_ap_num(&ap_num);
 
     if (ap_num == 0) {
-      LOG_XENSE(CUSTOM_WIFI_TAG, "No APs found");
+      ESP_LOGW(CUSTOM_WIFI_TAG, "No APs found");
       continue;
     }
 
     wifi_ap_record_t *ap_info =
         (wifi_ap_record_t *)malloc(sizeof(wifi_ap_record_t) * ap_num);
     if (ap_info == NULL) {
-      LOG_XENSE(CUSTOM_WIFI_TAG, "Memory allocation failed!");
+      ESP_LOGE(CUSTOM_WIFI_TAG, "Memory allocation failed!");
       continue;
     }
 
     if (esp_wifi_scan_get_ap_records(&ap_num, ap_info) == ESP_OK) {
       // Logging for debugging
+       // Logging for debugging
       for (int i = 0; i < ap_num; i++) {
-        LOG_XENSE(CUSTOM_WIFI_TAG, "-------------------%d---------------------",
-                  1 + i);
-        LOG_XENSE(CUSTOM_WIFI_TAG, "SSID: %s", ap_info[i].ssid);
-        LOG_XENSE(CUSTOM_WIFI_TAG, "BSSID: " MACSTR, MAC2STR(ap_info[i].bssid));
-        LOG_XENSE(CUSTOM_WIFI_TAG, "RSSI: %d", ap_info[i].rssi);
-        LOG_XENSE(CUSTOM_WIFI_TAG, "Authmode: %d", ap_info[i].authmode);
-        LOG_XENSE(CUSTOM_WIFI_TAG, "Channel: %d", ap_info[i].primary);
-        LOG_XENSE(CUSTOM_WIFI_TAG, "WiFi Cipher: %d",
-                  ap_info[i].pairwise_cipher);
-        LOG_XENSE(CUSTOM_WIFI_TAG, "Bandwidth: %d", ap_info[i].bandwidth);
+        ESP_LOGI(CUSTOM_WIFI_TAG, "-------------------%d---------------------", 1 + i);
+        ESP_LOGI(CUSTOM_WIFI_TAG, "SSID: %s", ap_info[i].ssid);
+        ESP_LOGI(CUSTOM_WIFI_TAG, "BSSID: " MACSTR, MAC2STR(ap_info[i].bssid));
+        ESP_LOGI(CUSTOM_WIFI_TAG, "RSSI: %d", ap_info[i].rssi);
+        ESP_LOGI(CUSTOM_WIFI_TAG, "Authmode: %d", ap_info[i].authmode);
+        ESP_LOGI(CUSTOM_WIFI_TAG, "Channel: %d", ap_info[i].primary);
+        ESP_LOGI(CUSTOM_WIFI_TAG, "WiFi Cipher: %d", ap_info[i].pairwise_cipher);
+        ESP_LOGI(CUSTOM_WIFI_TAG, "Bandwidth: %d", ap_info[i].bandwidth);
       }
 
       if (ws_server_handle != NULL && ws_socket_fd != -1) {
@@ -361,12 +359,11 @@ void wifi_scan_process_task(void *pvParameters) {
           // Free the JSON buffer after sending
           free(json_buf);
         } else {
-          LOG_XENSE(CUSTOM_WIFI_TAG,
-                    "Failed to allocate memory for JSON buffer");
+          ESP_LOGW(CUSTOM_WIFI_TAG, "Failed to allocate memory for JSON buffer");
         }
       }
     } else {
-      LOG_XENSE(CUSTOM_WIFI_TAG, "Failed to get AP records");
+      ESP_LOGW(CUSTOM_WIFI_TAG, "Failed to get AP records");
     }
 
     // Free the allocated memory for AP information after the scan

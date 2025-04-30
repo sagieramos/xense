@@ -8,8 +8,6 @@
 
 #define CUSTOM_WIFI_TAG "WiFiModule"
 #define DEFAULT_SCAN_LIST_SIZE 20
-#define NVS_STORAGE_NAMESPACE "xense"
-#define NVS_WIFI_KEY "wifi_sta"
 
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_SCAN_DONE_BIT BIT1

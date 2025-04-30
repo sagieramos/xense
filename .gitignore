@@ -13,6 +13,7 @@ node_modules
 cert/
 wifi_qr_env/
 pyvenv.cfg
+sdkconfig.esp32
 
 
 

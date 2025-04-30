@@ -1,4 +1,3 @@
-#include "log.h"
 #include "server.h"
 
 char index_html[4096];
@@ -48,37 +47,34 @@ void init_web_page_buffers() {
     const char *path;
     uint8_t *buffer;
     size_t buffer_size;
-    const char *name;
+    const char *file_name;
   } files_to_load[] = {
-      {INDEX_HTML_PATH, (uint8_t *)index_html, sizeof(index_html),
-       "index.html"},
+      {INDEX_HTML_PATH, (uint8_t *)index_html, sizeof(index_html), "index.html"},
       {APP_JS_PATH, (uint8_t *)app_js, sizeof(app_js), "app.js"},
-      {STYLE_CSS_PATH, (uint8_t *)style_css, sizeof(style_css), "style.js"},
-      {FAVICON_ICO_PATH, (uint8_t *)favicon_ico, sizeof(favicon_ico),
-       "favicon.ico"}};
+      {STYLE_CSS_PATH, (uint8_t *)style_css, sizeof(style_css), "style.css"},
+      {FAVICON_ICO_PATH, (uint8_t *)favicon_ico, sizeof(favicon_ico), "favicon.ico"}};
 
   for (int i = 0; i < sizeof(files_to_load) / sizeof(files_to_load[0]); i++) {
     struct stat st;
     if (stat(files_to_load[i].path, &st)) {
-      LOG_XENSE(WEBSERVER_TAG, "%s not found", files_to_load[i].name);
+      ESP_LOGW(WEBSERVER_TAG, "%s not found", files_to_load[i].file_name);
       continue;
     }
 
     if (st.st_size >= files_to_load[i].buffer_size) {
-      LOG_XENSE(WEBSERVER_TAG, "%s too large for buffer",
-                files_to_load[i].name);
+      ESP_LOGW(WEBSERVER_TAG, "%s too large for buffer", files_to_load[i].file_name);
       continue;
     }
 
     FILE *fp = fopen(files_to_load[i].path, "r");
     if (!fp) {
-      LOG_XENSE(WEBSERVER_TAG, "Failed to open %s", files_to_load[i].name);
+      ESP_LOGE(WEBSERVER_TAG, "Failed to open %s", files_to_load[i].file_name);
       continue;
     }
 
     memset(files_to_load[i].buffer, 0, files_to_load[i].buffer_size);
     if (fread(files_to_load[i].buffer, st.st_size, 1, fp) == 0) {
-      LOG_XENSE(WEBSERVER_TAG, "Failed to read %s", files_to_load[i].name);
+      ESP_LOGE(WEBSERVER_TAG, "Failed to read %s", files_to_load[i].file_name);
     }
     fclose(fp);
   }

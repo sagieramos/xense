@@ -13,7 +13,6 @@
 #include "freertos/event_groups.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
-#include "log.h"
 #include "nvs_flash.h"
 #include "server.h"
 #include "spi_flash_mmap.h"
