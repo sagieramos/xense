@@ -22,16 +22,26 @@ int main() {
 
   uint8_t buffer[128];
   size_t message_length;
-  uint8_t test_mac_address[] = {0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E};
+  pb_ostream_t stream;
 
-  serialize_scan_wifi_list(scan, buffer, &message_length, XENSE_DATA_TYPE_ID,
-                           test_mac_address, nullptr);
+  // Serialization
+  stream = pb_ostream_from_buffer(buffer, sizeof(buffer));
+  if (!pb_encode(&stream, &Xense_ScanResult_msg, &scan)) {
+    printf("Encoding failed: %s\n", PB_GET_ERROR(&stream));
+    return 1;
+  }
+  message_length = stream.bytes_written;
 
+  // Print the serialized buffer
   print_buffer(buffer, message_length);
 
   // Deserialization
   Xense_ScanResult decoded_scan = Xense_ScanResult_init_zero;
-  deserialize_scan_wifi_list(buffer, message_length, decoded_scan, nullptr);
+  pb_istream_t istream = pb_istream_from_buffer(buffer, message_length);
+  if (!pb_decode(&istream, &Xense_ScanResult_msg, &decoded_scan)) {
+    printf("Decoding failed: %s\n", PB_GET_ERROR(&istream));
+    return 1;
+  }
 
   // Print the decoded values
   for (size_t i = 0; i < decoded_scan.access_points_count; ++i) {

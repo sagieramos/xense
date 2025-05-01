@@ -12,6 +12,8 @@ void print_data(const Xense_data &data) {
             << std::endl;
 }
 
+uint8_t test_mac_address[] = {0x00, 0x1A, 0x2B, 0x3C, 0x4D, 0x5E};
+
 void test_xense_data_serialization_deserialization() {
   Xense_data data = Xense_data_init_default;
   data.battery_capacity = 75.0f;
@@ -32,15 +34,17 @@ void test_xense_data_serialization_deserialization() {
   std::cout << "Starting serialization..." << std::endl;
 
   // Serialize
-  XenseStatus status =
-      serialize_xense_data(data, buffer, &buffer_size, XENSE_DATA_TYPE_ID);
+  NpbStatus status =
+      serialize_xense_data(data, buffer, &buffer_size, XENSE_DATA_TYPE_ID,
+                           test_mac_address, nullptr);
   std::cout << "Serialization status: " << status << std::endl;
-  assert(status == XENSE_OK);
+  assert(status == NPB_OK);
   assert(buffer_size > 0);
   std::cout << "Buffer size after serialization: " << buffer_size << std::endl;
 
   // Print serialized data (buffer)
   print_buffer(buffer, buffer_size);
+  print_mac_address_from_buffer(buffer, buffer_size);
 
   std::cout << "Starting deserialization..." << std::endl;
 
@@ -49,7 +53,7 @@ void test_xense_data_serialization_deserialization() {
   status =
       deserialize_xense_data(buffer, buffer_size, deserialized_data, nullptr);
   std::cout << "Deserialization status: " << status << std::endl;
-  assert(status == XENSE_OK);
+  assert(status == NPB_OK);
 
   std::cout << "Checking values..." << std::endl;
 
