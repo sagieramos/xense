@@ -23,16 +23,17 @@ void testinggps() {
  * @param buffer The buffer to serialize the data into.
  * @param buffer_size The size of the buffer.
  * @param type_id The type ID to prepend to the buffer.
+ * @param mac_address The MAC address to append to the buffer.
  * @param callback The callback to call after serialization.
  * @return XENSE_OK if the serialization was successful, an error code
  * otherwise.
  */
 
-XenseStatus serialize_xense_data(const Xense_data &data, uint8_t *buffer,
-                                 size_t *buffer_size, uint8_t type_id,
-                                 xense_callback callback) {
-  return serialize_xense_message({&data, Xense_data_fields}, buffer,
-                                 buffer_size, type_id, callback);
+NpbStatus serialize_xense_data(const Xense_data &data, uint8_t *buffer,
+                               size_t *buffer_size, uint8_t type_id,
+                               uint8_t *mac_address, xense_callback callback) {
+  return npb_encode({&data, Xense_data_fields}, buffer, buffer_size, type_id,
+                    mac_address, callback);
 }
 
 /**
@@ -44,8 +45,7 @@ XenseStatus serialize_xense_data(const Xense_data &data, uint8_t *buffer,
  * @param callback The callback to call after serialization.
  * @return True if the deserialization was successful, false otherwise.
  */
-XenseStatus deserialize_xense_data(const uint8_t *buffer, size_t buffer_size,
-                                   Xense_data &data, xense_callback callback) {
-  return deserialize_xense_message({&data, Xense_data_fields}, buffer,
-                                   buffer_size, callback);
+NpbStatus deserialize_xense_data(const uint8_t *buffer, size_t buffer_size,
+                                 Xense_data &data, xense_callback callback) {
+  return npb_decode({&data, Xense_data_fields}, buffer, buffer_size, callback);
 }

@@ -1,7 +1,7 @@
 #include "custom_wifi.h"
+#include "esp_log.h"
 #include "esp_mac.h"
 #include <cstring>
-#include "esp_log.h"
 
 void set_xense_hostname(esp_netif_t *netif) {
   uint8_t mac[6];
@@ -29,6 +29,6 @@ void set_xense_ap_ssid(wifi_config_t *ap_config) {
   ap_config->ap.ssid_len =
       strlen((char *)ap_config->ap.ssid); // Ensure length is set correctly
 
-  ESP_LOGI("AP_SSID", "Updated AP SSID to: %s (Length: %d)",
-            ap_config->ap.ssid, ap_config->ap.ssid_len);
+  ESP_LOGI("AP_SSID", "Updated AP SSID to: %s (Length: %d)", ap_config->ap.ssid,
+           ap_config->ap.ssid_len);
 }

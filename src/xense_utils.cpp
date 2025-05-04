@@ -1,6 +1,6 @@
 #include "xense_utils.h"
-#include "esp_mac.h"
 #include "esp_log.h"
+#include "esp_mac.h"
 
 #define TASK "TASK"
 #define LED_QUEUE_LENGTH 5

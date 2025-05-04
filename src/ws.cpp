@@ -67,7 +67,7 @@ esp_err_t ws_trigger_async_send(httpd_handle_t server, httpd_req_t *req,
     } else {
       free(resp_arg);
       ESP_LOGE("WebSocket Server",
-        "Invalid argument: req is NULL and ws_socket_fd is not set");
+               "Invalid argument: req is NULL and ws_socket_fd is not set");
       return ESP_ERR_INVALID_ARG;
     }
   } else {
@@ -97,7 +97,8 @@ esp_err_t handle_ws_req(httpd_req_t *req) {
     return ret;
   }
 
-  ESP_LOGI(TAG, "Received frame of type %d and length %d", ws_pkt.type, ws_pkt.len);
+  ESP_LOGI(TAG, "Received frame of type %d and length %d", ws_pkt.type,
+           ws_pkt.len);
 
   if (ws_pkt.len > 0) {
     buf = (uint8_t *)calloc(1, ws_pkt.len + 1);
@@ -116,7 +117,8 @@ esp_err_t handle_ws_req(httpd_req_t *req) {
   }
 
   if (ws_pkt.type == HTTPD_WS_TYPE_TEXT) {
-    ESP_LOGI(TAG, "Received TEXT message: %s", ws_pkt.payload ? (char *)ws_pkt.payload : "(null)");
+    ESP_LOGI(TAG, "Received TEXT message: %s",
+             ws_pkt.payload ? (char *)ws_pkt.payload : "(null)");
 
     if (ws_pkt.payload && strcmp((char *)ws_pkt.payload, "scan") == 0) {
       ws_server_handle = req->handle;
@@ -135,7 +137,7 @@ esp_err_t handle_ws_req(httpd_req_t *req) {
       taskEXIT_CRITICAL(&scan_mux);
 
       ESP_LOGI(TAG, "Received scan request");
-      wifi_scan();  // Start scan
+      wifi_scan(); // Start scan
       free(buf);
       return ESP_OK;
     }

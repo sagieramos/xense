@@ -27,6 +27,11 @@ int main() {
   serialize_scan_wifi_list(scan, buffer, &message_length, XENSE_DATA_TYPE_ID,
                            test_mac_address, nullptr);
 
+                           uint8_t extracted_mac[6];
+  get_mac_address_from_npb(buffer, message_length, extracted_mac);
+  print_mac(extracted_mac);
+
+
   print_buffer(buffer, message_length);
 
   // Deserialization

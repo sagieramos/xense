@@ -13,11 +13,12 @@
  * otherwise.
  */
 
-XenseStatus serialize_xense_metadata(const Xense_metadata &metadata,
-                                     uint8_t *buffer, size_t *buffer_size,
-                                     uint8_t type_id, xense_callback callback) {
-  return serialize_xense_message({&metadata, Xense_metadata_fields}, buffer,
-                                 buffer_size, type_id, callback);
+NpbStatus serialize_xense_metadata(const Xense_metadata &metadata,
+                                   uint8_t *buffer, size_t *buffer_size,
+                                   uint8_t type_id, uint8_t *mac_address,
+                                   xense_callback callback) {
+  return npb_encode({&metadata, Xense_metadata_fields}, buffer, buffer_size,
+                    type_id, mac_address, callback);
 }
 
 /**
@@ -31,10 +32,9 @@ XenseStatus serialize_xense_metadata(const Xense_metadata &metadata,
  * @return True if the deserialization was successful, false otherwise.
  */
 
-XenseStatus deserialize_xense_metadata(const uint8_t *buffer,
-                                       size_t buffer_size,
-                                       Xense_metadata &metadata,
-                                       xense_callback callback) {
-  return deserialize_xense_message({&metadata, Xense_metadata_fields}, buffer,
-                                   buffer_size, callback);
+NpbStatus deserialize_xense_metadata(const uint8_t *buffer, size_t buffer_size,
+                                     Xense_metadata &metadata,
+                                     xense_callback callback) {
+  return npb_decode({&metadata, Xense_metadata_fields}, buffer, buffer_size,
+                    callback);
 }

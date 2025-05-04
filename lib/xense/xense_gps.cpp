@@ -13,11 +13,11 @@ const int SCALE_FACTOR = 1e9;
  * @return True if the serialization was successful, false otherwise.
  */
 
-XenseStatus serialize_xense_gps(const Xense_gps &gps, uint8_t *buffer,
-                                size_t *buffer_size, uint8_t type_id,
-                                xense_callback callback) {
-  return serialize_xense_message({&gps, Xense_gps_fields}, buffer, buffer_size,
-                                 type_id, callback);
+NpbStatus serialize_xense_gps(const Xense_gps &gps, uint8_t *buffer,
+                              size_t *buffer_size, uint8_t type_id,
+                              uint8_t *mac_address, xense_callback callback) {
+  return npb_encode({&gps, Xense_gps_fields}, buffer, buffer_size, type_id,
+                    mac_address, callback);
 }
 /**
  * @brief Deserialize the Xense coordinate structure from a buffer.
@@ -28,8 +28,7 @@ XenseStatus serialize_xense_gps(const Xense_gps &gps, uint8_t *buffer,
  * @param callback The callback to call after serialization.
  * @return True if the deserialization was successful, false otherwise.
  */
-XenseStatus deserialize_xense_gps(const uint8_t *buffer, size_t buffer_size,
-                                  Xense_gps &gps, xense_callback callback) {
-  return deserialize_xense_message({&gps, Xense_gps_fields}, buffer,
-                                   buffer_size, callback);
+NpbStatus deserialize_xense_gps(const uint8_t *buffer, size_t buffer_size,
+                                Xense_gps &gps, xense_callback callback) {
+  return npb_decode({&gps, Xense_gps_fields}, buffer, buffer_size, callback);
 }

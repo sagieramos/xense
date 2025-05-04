@@ -112,8 +112,8 @@ static void wifi_event_handler(void *arg, esp_event_base_t event_base,
       wifi_event_sta_connected_t *event =
           (wifi_event_sta_connected_t *)event_data;
       ESP_LOGI(CUSTOM_WIFI_TAG,
-               "Station connected to AP, SSID: %s, BSSID: " MACSTR,
-               event->ssid, MAC2STR(event->bssid));
+               "Station connected to AP, SSID: %s, BSSID: " MACSTR, event->ssid,
+               MAC2STR(event->bssid));
       break;
     }
 
@@ -199,7 +199,7 @@ void wifi_init_ap() {
   ESP_ERROR_CHECK(esp_wifi_start());
 
   ESP_LOGI("WiFiModule", "AP started. SSID:%s password:%s", ap_config.ap.ssid,
-            ap_config.ap.password);
+           ap_config.ap.password);
 }
 
 // AP and STA mode
@@ -311,15 +311,17 @@ void wifi_scan_process_task(void *pvParameters) {
 
     if (esp_wifi_scan_get_ap_records(&ap_num, ap_info) == ESP_OK) {
       // Logging for debugging
-       // Logging for debugging
+      // Logging for debugging
       for (int i = 0; i < ap_num; i++) {
-        ESP_LOGI(CUSTOM_WIFI_TAG, "-------------------%d---------------------", 1 + i);
+        ESP_LOGI(CUSTOM_WIFI_TAG, "-------------------%d---------------------",
+                 1 + i);
         ESP_LOGI(CUSTOM_WIFI_TAG, "SSID: %s", ap_info[i].ssid);
         ESP_LOGI(CUSTOM_WIFI_TAG, "BSSID: " MACSTR, MAC2STR(ap_info[i].bssid));
         ESP_LOGI(CUSTOM_WIFI_TAG, "RSSI: %d", ap_info[i].rssi);
         ESP_LOGI(CUSTOM_WIFI_TAG, "Authmode: %d", ap_info[i].authmode);
         ESP_LOGI(CUSTOM_WIFI_TAG, "Channel: %d", ap_info[i].primary);
-        ESP_LOGI(CUSTOM_WIFI_TAG, "WiFi Cipher: %d", ap_info[i].pairwise_cipher);
+        ESP_LOGI(CUSTOM_WIFI_TAG, "WiFi Cipher: %d",
+                 ap_info[i].pairwise_cipher);
         ESP_LOGI(CUSTOM_WIFI_TAG, "Bandwidth: %d", ap_info[i].bandwidth);
       }
 
@@ -359,7 +361,8 @@ void wifi_scan_process_task(void *pvParameters) {
           // Free the JSON buffer after sending
           free(json_buf);
         } else {
-          ESP_LOGW(CUSTOM_WIFI_TAG, "Failed to allocate memory for JSON buffer");
+          ESP_LOGW(CUSTOM_WIFI_TAG,
+                   "Failed to allocate memory for JSON buffer");
         }
       }
     } else {

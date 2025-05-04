@@ -13,11 +13,11 @@
  * otherwise.
  */
 
-XenseStatus serialize_xense_state(const Xense_state &state, uint8_t *buffer,
-                                  size_t *buffer_size, uint8_t type_id,
-                                  xense_callback callback) {
-  return serialize_xense_message({&state, Xense_state_fields}, buffer,
-                                 buffer_size, type_id, callback);
+NpbStatus serialize_xense_state(const Xense_state &state, uint8_t *buffer,
+                                size_t *buffer_size, uint8_t type_id,
+                                uint8_t *mac_address, xense_callback callback) {
+  return npb_encode({&state, Xense_state_fields}, buffer, buffer_size, type_id,
+                    mac_address, callback);
 }
 
 /**
@@ -30,9 +30,8 @@ XenseStatus serialize_xense_state(const Xense_state &state, uint8_t *buffer,
  *
  * @return True if the deserialization was successful, false otherwise.
  */
-XenseStatus deserialize_xense_state(const uint8_t *buffer, size_t buffer_size,
-                                    Xense_state &state,
-                                    xense_callback callback) {
-  return deserialize_xense_message({&state, Xense_state_fields}, buffer,
-                                   buffer_size, callback);
+NpbStatus deserialize_xense_state(const uint8_t *buffer, size_t buffer_size,
+                                  Xense_state &state, xense_callback callback) {
+  return npb_decode({&state, Xense_state_fields}, buffer, buffer_size,
+                    callback);
 }

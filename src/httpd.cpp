@@ -49,10 +49,12 @@ void init_web_page_buffers() {
     size_t buffer_size;
     const char *file_name;
   } files_to_load[] = {
-      {INDEX_HTML_PATH, (uint8_t *)index_html, sizeof(index_html), "index.html"},
+      {INDEX_HTML_PATH, (uint8_t *)index_html, sizeof(index_html),
+       "index.html"},
       {APP_JS_PATH, (uint8_t *)app_js, sizeof(app_js), "app.js"},
       {STYLE_CSS_PATH, (uint8_t *)style_css, sizeof(style_css), "style.css"},
-      {FAVICON_ICO_PATH, (uint8_t *)favicon_ico, sizeof(favicon_ico), "favicon.ico"}};
+      {FAVICON_ICO_PATH, (uint8_t *)favicon_ico, sizeof(favicon_ico),
+       "favicon.ico"}};
 
   for (int i = 0; i < sizeof(files_to_load) / sizeof(files_to_load[0]); i++) {
     struct stat st;
@@ -62,7 +64,8 @@ void init_web_page_buffers() {
     }
 
     if (st.st_size >= files_to_load[i].buffer_size) {
-      ESP_LOGW(WEBSERVER_TAG, "%s too large for buffer", files_to_load[i].file_name);
+      ESP_LOGW(WEBSERVER_TAG, "%s too large for buffer",
+               files_to_load[i].file_name);
       continue;
     }
 
