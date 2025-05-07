@@ -2,7 +2,6 @@
 
 #define TYPE_ID 1
 #define MAC_ADDRESS 6
-#define TABLE_SIZE 32
 
 NpbStatus npb_encode(const NpbMessageDescriptor &desc, uint8_t *buffer,
                      size_t *buffer_size, uint8_t type_id, uint8_t *mac_address,
@@ -57,61 +56,3 @@ NpbStatus get_mac_address_from_npb(const uint8_t *buffer, size_t buffer_size,
   memcpy(mac_address, buffer + TYPE_ID, MAC_ADDRESS);
   return NPB_OK;
 }
-
-typedef struct {
-    uint8_t mac[6];
-    SlotState state;
-} MacEntry;
-
-MacEntry mac_table[TABLE_SIZE];
-
-uint32_t mac_hash(const uint8_t *mac) {
-    uint32_t hash = 0;
-    for (int i = 0; i < 6; i++) {
-        hash = (hash * 31) ^ mac[i];
-    }
-    return hash % TABLE_SIZE;
-}
-
-bool mac_exists(const uint8_t *mac) {
-    uint32_t index = mac_hash(mac);
-    for (int i = 0; i < TABLE_SIZE; i++) {
-        uint32_t probe = (index + i) % TABLE_SIZE;
-        if (mac_table[probe].state == SLOT_EMPTY) return false;
-        if (mac_table[probe].state == SLOT_OCCUPIED &&
-            memcmp(mac_table[probe].mac, mac, 6) == 0) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool mac_insert(const uint8_t *mac) {
-    if (mac_exists(mac)) return false;
-
-    uint32_t index = mac_hash(mac);
-    for (int i = 0; i < TABLE_SIZE; i++) {
-        uint32_t probe = (index + i) % TABLE_SIZE;
-        if (mac_table[probe].state == SLOT_EMPTY || mac_table[probe].state == SLOT_TOMBSTONE) {
-            memcpy(mac_table[probe].mac, mac, 6);
-            mac_table[probe].state = SLOT_OCCUPIED;
-            return true;
-        }
-    }
-    return false; // Table full
-}
-
-bool mac_delete(const uint8_t *mac) {
-    uint32_t index = mac_hash(mac);
-    for (int i = 0; i < TABLE_SIZE; i++) {
-        uint32_t probe = (index + i) % TABLE_SIZE;
-        if (mac_table[probe].state == SLOT_EMPTY) return false; // Not found
-        if (mac_table[probe].state == SLOT_OCCUPIED &&
-            memcmp(mac_table[probe].mac, mac, 6) == 0) {
-            mac_table[probe].state = SLOT_TOMBSTONE;
-            return true; // Deleted
-        }
-    }
-    return false; // Not found
-}
-

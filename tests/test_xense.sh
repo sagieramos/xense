@@ -29,6 +29,7 @@ SRC_FILES="$SRC_FILE \
            ./utils.cpp \
            ./utils.h \
            ../lib/npb/* \
+           ../lib/mac_table/*.c \
            ../lib/xense/*.cpp \
            ../lib/xense/protoc/* \
            ../external/nanopb/pb_encode.c \
@@ -37,6 +38,7 @@ SRC_FILES="$SRC_FILE \
 
 # Define include directories and compiler flags
 INCLUDE_DIRS="-I../lib/xense \
+              -I../lib/mac_table \
               -I../lib/xense/protoc \
               -I../external/nanopb"
               

@@ -15,6 +15,8 @@
 #define XENSE_STATE_TYPE_ID 4
 #define XENSE_DATA_TYPE_ID 5
 
+#include <esp_mesh.h>
+
 // xense_common.h
 
 NpbStatus serialize_xense_data(const Xense_data &data, uint8_t *buffer,

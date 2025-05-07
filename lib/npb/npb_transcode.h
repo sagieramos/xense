@@ -14,12 +14,6 @@ typedef enum {
   NPB_INVALID_SIZE
 } NpbStatus;
 
-typedef enum {
-    SLOT_EMPTY,
-    SLOT_OCCUPIED,
-    SLOT_TOMBSTONE
-} SlotState;
-
 typedef void (*xense_callback)(const void *buffer, size_t size);
 
 struct NpbMessageDescriptor {
