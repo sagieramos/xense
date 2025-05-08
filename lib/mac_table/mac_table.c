@@ -7,6 +7,7 @@ extern "C" {
 #include <time.h>
 #include <esp_crc.h>
 #include "mac_table.h"
+#include "esp_log.h"
 
 static inline uint32_t mac_hash(const uint8_t *mac, size_t size)
 {
@@ -35,7 +36,7 @@ void mac_table_init(MacTable *table, MacTableEntry *entries, size_t size,
 
     table->expiry_manager = expiry_manager_create(table);
     if (!table->expiry_manager) {
-        ESP_LOGE("xpiry_manager", "Failed to create expiry manager. MAC table timeouts will not be handled.");
+        ESP_LOGW("xpiry_manager", "Failed to create expiry manager. MAC table timeouts will not be handled.");
         esp_restart();
     }
 }
